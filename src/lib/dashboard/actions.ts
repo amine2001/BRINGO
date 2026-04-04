@@ -16,10 +16,9 @@ import {
   users,
   type DeliveryType,
 } from "@/lib/db";
-import { isSuperUserRole, isUserRole, type UserRole } from "@/lib/auth/roles";
+import { isUserRole, type UserRole } from "@/lib/auth/roles";
 import { writeInfoLog } from "@/lib/logs/service";
 import {
-  canManageCompanies,
   requireCompanyContext,
   requireSuperUserContext,
 } from "@/lib/tenant/context";
@@ -604,22 +603,12 @@ export async function saveUserAction(formData: FormData) {
   const context = await requireCompanyContext();
   const db = getDb();
   const supabaseAdmin = getSupabaseAdminClient();
-  const hasCompanyAccess = canManageCompanies(context);
 
   const userId = asOptionalString(formData.get("userId"));
-  const requestedCompanyId = asOptionalString(formData.get("companyId")) ?? context.company.id;
   const fullName = asString(formData.get("fullName"));
   const email = asString(formData.get("email"));
   const password = asOptionalString(formData.get("password"));
   const role = asRole(formData.get("role"));
-
-  if (!hasCompanyAccess && requestedCompanyId !== context.company.id) {
-    throw new Error("Only super users can assign access across companies.");
-  }
-
-  if (!hasCompanyAccess && isSuperUserRole(role)) {
-    throw new Error("Only super users can assign the super user role.");
-  }
 
   let resolvedUserId = userId;
 
@@ -651,8 +640,8 @@ export async function saveUserAction(formData: FormData) {
     .limit(1)
     .then((rows) => rows[0] ?? null);
 
-  if (existingProfile && !hasCompanyAccess && existingProfile.companyId !== context.company.id) {
-    throw new Error("You can only manage access for users in your company.");
+  if (existingProfile && existingProfile.companyId !== context.company.id) {
+    throw new Error("You can only manage Bringo users from this dashboard.");
   }
 
   const normalizedFullName = fullName || existingProfile?.fullName || email;
@@ -662,7 +651,7 @@ export async function saveUserAction(formData: FormData) {
     throw new Error("Full name and email are required.");
   }
 
-  const targetCompanyId = hasCompanyAccess ? requestedCompanyId : context.company.id;
+  const targetCompanyId = context.company.id;
 
   const [company] = await db
     .select({ id: companies.id })
@@ -703,7 +692,6 @@ export async function saveUserAction(formData: FormData) {
 export async function toggleUserActiveAction(formData: FormData) {
   const context = await requireCompanyContext();
   const db = getDb();
-  const hasCompanyAccess = canManageCompanies(context);
   const userId = asString(formData.get("userId"));
   const nextValue = asString(formData.get("nextValue")) === "true";
 
@@ -727,8 +715,8 @@ export async function toggleUserActiveAction(formData: FormData) {
     throw new Error("User not found.");
   }
 
-  if (!hasCompanyAccess && targetUser.companyId !== context.company.id) {
-    throw new Error("You can only manage users in your company.");
+  if (targetUser.companyId !== context.company.id) {
+    throw new Error("You can only manage Bringo users from this dashboard.");
   }
 
   await db

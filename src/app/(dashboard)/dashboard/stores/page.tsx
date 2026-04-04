@@ -14,7 +14,6 @@ import { requireCompanyContext } from "@/lib/tenant/context";
 
 const storeColumns = [
   { key: "store", label: "Store" },
-  { key: "company", label: "Tenant" },
   { key: "deliveryTypes", label: "Enabled delivery types" },
   { key: "routing", label: "Telegram routing" },
   { key: "status", label: "Status" },
@@ -34,7 +33,6 @@ export default async function StoresPage() {
         </p>
       </div>
     ),
-    company: context.company.name,
     deliveryTypes: (
       <div className="flex flex-wrap gap-2">
         {store.enabledTypes.length > 0 ? (
@@ -102,7 +100,7 @@ export default async function StoresPage() {
       <PageHeader
         eyebrow="Stores"
         title="Manage store routing and delivery-type availability"
-        description="This workspace controls whether EXPRESS, MARKET, and HYPER are active for each store and which Telegram destinations should receive notifications."
+        description="Control whether EXPRESS, MARKET, and HYPER are active for each store and which Telegram destinations should receive notifications."
       />
 
       <SectionCard

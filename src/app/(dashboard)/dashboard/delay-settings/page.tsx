@@ -7,7 +7,6 @@ import { getDelaySettingsPageData } from "@/lib/dashboard/queries";
 import { requireCompanyContext } from "@/lib/tenant/context";
 
 const thresholdColumns = [
-  { key: "scope", label: "Scope" },
   { key: "threshold", label: "Delay threshold" },
   { key: "adminChat", label: "Admin Telegram chat" },
   { key: "status", label: "Status" },
@@ -19,7 +18,6 @@ export default async function DelaySettingsPage() {
   const thresholdRows = data.settings
     ? [
         {
-          scope: context.company.name,
           threshold: `${data.settings.delayThresholdMinutes} minutes`,
           adminChat: (
             <span className="font-mono text-xs">
@@ -45,25 +43,16 @@ export default async function DelaySettingsPage() {
 
       <SectionCard
         title="Current escalation policies"
-        description="Delay escalation is managed at the tenant level so there is a single admin destination and threshold for the active company."
+        description="Delay escalation uses one admin destination and one threshold across the operation."
       >
         <DataTable columns={thresholdColumns} rows={thresholdRows} />
       </SectionCard>
 
       <SectionCard
         title="Configure delay alerting"
-        description="Threshold minutes and admin chat identifiers are surfaced together because they work as a single operational policy."
+        description="Threshold minutes and admin chat identifiers are surfaced together because they work as one operational policy."
       >
         <form action={saveDelaySettingsAction} className="grid gap-4 lg:grid-cols-2">
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">Tenant</span>
-            <input
-              readOnly
-              type="text"
-              value={context.company.name}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
-            />
-          </label>
           <label className="space-y-2 text-sm text-slate-300">
             <span className="block font-medium text-white">Admin Telegram chat ID</span>
             <input

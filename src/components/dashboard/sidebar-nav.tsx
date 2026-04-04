@@ -16,13 +16,9 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-type SidebarNavProps = {
-  canManageCompanies: boolean;
-};
-
-export function SidebarNav({ canManageCompanies }: SidebarNavProps) {
+export function SidebarNav() {
   const pathname = usePathname();
-  const dashboardNavItems = getDashboardNavItems(canManageCompanies);
+  const dashboardNavItems = getDashboardNavItems();
 
   return (
     <nav className="space-y-2">

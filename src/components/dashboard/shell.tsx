@@ -1,18 +1,14 @@
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
 type DashboardShellProps = {
-  companyName?: string;
   userEmail?: string;
   bootstrapMode?: boolean;
-  canManageCompanies?: boolean;
   children: React.ReactNode;
 };
 
 export function DashboardShell({
-  companyName = "Unassigned tenant",
   userEmail,
   bootstrapMode = false,
-  canManageCompanies = false,
   children,
 }: DashboardShellProps) {
   return (
@@ -35,15 +31,15 @@ export function DashboardShell({
 
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/4 p-4">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                Workspace
+                Session
               </p>
               <div className="mt-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-medium text-white">{companyName}</p>
+                  <p className="text-sm font-medium text-white">Bringo</p>
                   <p className="text-xs text-slate-400">
                     {bootstrapMode
-                      ? "Bootstrap mode until the first user profile is assigned"
-                      : userEmail ?? "Tenant operations team"}
+                      ? "Bootstrap mode until the first operator profile is assigned"
+                      : userEmail ?? "Bringo operations team"}
                   </p>
                 </div>
                 <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
@@ -53,7 +49,7 @@ export function DashboardShell({
             </div>
 
             <div className="mt-6">
-              <SidebarNav canManageCompanies={canManageCompanies} />
+              <SidebarNav />
             </div>
           </div>
         </aside>

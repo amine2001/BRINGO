@@ -124,7 +124,7 @@ export default async function DashboardOverviewPage() {
             ))}
             {data.recentOrders.length === 0 ? (
               <div className="rounded-[24px] border border-dashed border-white/15 bg-white/3 p-6 text-sm text-slate-400">
-                No orders have been processed yet for this tenant.
+                No orders have been processed yet.
               </div>
             ) : null}
           </div>

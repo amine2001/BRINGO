@@ -4,7 +4,7 @@ export type DashboardNavItem = {
   description: string;
 };
 
-export function getDashboardNavItems(canManageCompanies: boolean): DashboardNavItem[] {
+export function getDashboardNavItems(): DashboardNavItem[] {
   return [
     {
       href: "/dashboard",
@@ -41,14 +41,5 @@ export function getDashboardNavItems(canManageCompanies: boolean): DashboardNavI
       label: "Access",
       description: "Manage users and permissions",
     },
-    ...(canManageCompanies
-      ? [
-          {
-            href: "/dashboard/companies",
-            label: "Companies",
-            description: "Add and remove workspaces",
-          },
-        ]
-      : []),
   ];
 }
