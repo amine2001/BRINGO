@@ -4,6 +4,7 @@ import { MetricCard } from "@/components/dashboard/metric-card";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { isSuperUserRole } from "@/lib/auth/roles";
 import { runManualPollAction } from "@/lib/dashboard/actions";
 import { getDashboardOverviewData } from "@/lib/dashboard/queries";
 import { requireCompanyContext } from "@/lib/tenant/context";
@@ -24,6 +25,7 @@ function statusTone(status: string) {
 export default async function DashboardOverviewPage() {
   const context = await requireCompanyContext();
   const data = await getDashboardOverviewData(context.company.id);
+  const canSeeOverviewActions = isSuperUserRole(context.profile?.role);
 
   const metrics = [
     {
@@ -57,16 +59,18 @@ export default async function DashboardOverviewPage() {
         title="Live command center"
         description="Track the flow from Redash ingestion to notification dispatch and admin escalation. This overview is intentionally operational: it surfaces order pressure, alerting posture, and the most recent automation outcomes."
         actions={
-          <>
-            <button className="dashboard-button-secondary rounded-full px-4 py-2 text-sm font-medium">
-              Export operational snapshot
-            </button>
-            <form action={runManualPollAction}>
-              <button className="dashboard-button-primary rounded-full px-4 py-2 text-sm font-medium">
-                Run manual poll
+          canSeeOverviewActions ? (
+            <>
+              <button className="dashboard-button-secondary rounded-full px-4 py-2 text-sm font-medium">
+                Export operational snapshot
               </button>
-            </form>
-          </>
+              <form action={runManualPollAction}>
+                <button className="dashboard-button-primary rounded-full px-4 py-2 text-sm font-medium">
+                  Run manual poll
+                </button>
+              </form>
+            </>
+          ) : null
         }
       />
 

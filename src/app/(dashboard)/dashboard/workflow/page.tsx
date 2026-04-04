@@ -78,10 +78,10 @@ export default async function WorkflowPage() {
           {steps.map((item) => (
             <div
               key={item.step}
-              className="dashboard-soft-card relative overflow-hidden rounded-[26px] p-5"
+              className="dashboard-soft-card relative h-full overflow-hidden rounded-[26px] p-5"
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
-              <div className="relative">
+              <div className="relative flex h-full flex-col">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
                     STEP {item.step}
@@ -91,14 +91,14 @@ export default async function WorkflowPage() {
                 <p className="mt-4 text-lg font-semibold text-[color:var(--dashboard-heading)]">
                   {item.title}
                 </p>
-                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-body)]">
+                <p className="mt-3 min-h-[96px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
                 </p>
-                <div className="mt-5 space-y-2">
+                <div className="mt-5 grid flex-1 grid-rows-2 gap-2">
                   {item.details.map((detail) => (
                     <div
                       key={detail}
-                      className="dashboard-strong-card rounded-2xl px-4 py-3 text-sm text-[color:var(--dashboard-body)]"
+                      className="dashboard-strong-card flex min-h-[64px] items-center rounded-2xl px-4 py-3 text-sm leading-6 text-[color:var(--dashboard-body)]"
                     >
                       {detail}
                     </div>

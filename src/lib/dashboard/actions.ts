@@ -106,7 +106,10 @@ export async function saveDashboardSettingsAction(formData: FormData) {
   });
 
   revalidateDashboard();
-  redirect("/dashboard/settings");
+  return {
+    language,
+    theme,
+  };
 }
 
 export async function runManualPollAction() {

@@ -7,7 +7,6 @@ type SectionCardProps = {
 
 export function SectionCard({
   title,
-  description,
   action,
   children,
 }: SectionCardProps) {
@@ -18,11 +17,6 @@ export function SectionCard({
           <h3 className="text-xl font-semibold tracking-tight text-[color:var(--dashboard-heading)]">
             {title}
           </h3>
-          {description ? (
-            <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-muted-text)]">
-              {description}
-            </p>
-          ) : null}
         </div>
         {action}
       </div>

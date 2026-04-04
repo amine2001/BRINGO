@@ -28,9 +28,6 @@ export default async function StoresPage() {
     store: (
       <div>
         <p className="font-medium text-white">{store.name}</p>
-        <p className="mt-1 text-xs text-slate-400">
-          {store.code ? `Code: ${store.code}` : `Store ID: ${store.id}`}
-        </p>
       </div>
     ),
     deliveryTypes: (
@@ -115,21 +112,12 @@ export default async function StoresPage() {
         description="Use this form to configure a store and toggle delivery types without exposing any deprecated slot logic."
       >
         <form action={saveStoreAction} className="grid gap-4 lg:grid-cols-2">
-          <label className="space-y-2 text-sm text-slate-300">
+          <label className="space-y-2 text-sm text-slate-300 lg:col-span-2">
             <span className="block font-medium text-white">Store name</span>
             <input
               name="name"
               type="text"
               placeholder="Carrefour Ain Sebaa"
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
-            />
-          </label>
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">Store code</span>
-            <input
-              name="code"
-              type="text"
-              placeholder="casa_express_01"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
             />
           </label>
