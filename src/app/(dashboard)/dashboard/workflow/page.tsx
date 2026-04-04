@@ -78,18 +78,13 @@ export default async function WorkflowPage() {
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
               <div className="relative flex h-full flex-col">
-                <div>
+                <div className="flex flex-col items-start gap-4">
                   <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
                     STEP {item.step}
                   </span>
-                </div>
-                <div className="mt-4">
                   <StatusPill tone="info">{item.title}</StatusPill>
                 </div>
-                <p className="mt-4 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
-                  {item.title}
-                </p>
-                <p className="mt-0 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
+                <p className="mt-4 min-h-[96px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
                 </p>
                 <div className="mt-5 grid flex-1 grid-rows-2 gap-2">
