@@ -6,14 +6,7 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const context = await requireCompanyContext();
+  await requireCompanyContext();
 
-  return (
-    <DashboardShell
-      userEmail={context.authUser.email ?? undefined}
-      bootstrapMode={context.bootstrapMode}
-    >
-      {children}
-    </DashboardShell>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }

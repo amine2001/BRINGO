@@ -1,16 +1,10 @@
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
 type DashboardShellProps = {
-  userEmail?: string;
-  bootstrapMode?: boolean;
   children: React.ReactNode;
 };
 
-export function DashboardShell({
-  userEmail,
-  bootstrapMode = false,
-  children,
-}: DashboardShellProps) {
+export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <div
       data-dashboard-shell-root="true"
@@ -30,25 +24,6 @@ export function DashboardShell({
                 API-driven orchestration for orders, notifications, and admin
                 alerting.
               </p>
-            </div>
-
-            <div className="mt-6 rounded-3xl border border-white/10 bg-white/4 p-4">
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                Session
-              </p>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-white">Bringo</p>
-                  <p className="text-xs text-slate-400">
-                    {bootstrapMode
-                      ? "Bootstrap mode until the first operator profile is assigned"
-                      : userEmail ?? "Bringo operations team"}
-                  </p>
-                </div>
-                <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
-                  {bootstrapMode ? "Bootstrap" : "Live"}
-                </span>
-              </div>
             </div>
 
             <div className="mt-6">
