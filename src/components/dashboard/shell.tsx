@@ -1,10 +1,5 @@
-import { cookies } from "next/headers";
-
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
-import {
-  LANGUAGE_COOKIE_NAME,
-  resolveAppLanguage,
-} from "@/lib/settings/preferences";
+import { getCurrentAppLanguage } from "@/lib/settings/server";
 
 type DashboardShellProps = {
   children: React.ReactNode;
@@ -19,23 +14,22 @@ const HERO_COPY = {
   fr: {
     eyebrow: "Last Mile",
     title: "Control Tower",
-    description: "Pilotage des commandes, notifications et alertes admin.",
+    description: "Pilotage des commandes, notifications et alertes administratives.",
   },
   ar: {
-    eyebrow: "Bringo",
-    title: "Control Tower",
-    description: "متابعة الطلبات والتنبيهات والتنبيه الاداري في الوقت الحقيقي.",
+    eyebrow: "العمليات",
+    title: "برج التحكم",
+    description: "إدارة الطلبات والإشعارات والتنبيهات الإدارية بشكل مباشر.",
   },
   pt: {
     eyebrow: "Last Mile",
     title: "Control Tower",
-    description: "Orquestracao de pedidos, notificacoes e alertas administrativos.",
+    description: "Orquestração de pedidos, notificações e alertas administrativos.",
   },
 } as const;
 
 export async function DashboardShell({ children }: DashboardShellProps) {
-  const cookieStore = await cookies();
-  const language = resolveAppLanguage(cookieStore.get(LANGUAGE_COOKIE_NAME)?.value);
+  const language = await getCurrentAppLanguage();
   const heroCopy = HERO_COPY[language];
 
   return (

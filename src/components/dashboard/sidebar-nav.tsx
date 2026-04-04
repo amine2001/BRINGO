@@ -21,9 +21,45 @@ type SidebarNavProps = {
   language: AppLanguage;
 };
 
+const LOGOUT_COPY = {
+  en: {
+    title: "Logout?",
+    description: "You will be signed out of the current workspace session.",
+    confirmLabel: "Logout",
+    cancelLabel: "Cancel",
+    label: "Logout",
+    hint: "End the current session",
+  },
+  fr: {
+    title: "Se deconnecter ?",
+    description: "La session en cours sera fermee pour cet espace de travail.",
+    confirmLabel: "Se deconnecter",
+    cancelLabel: "Annuler",
+    label: "Deconnexion",
+    hint: "Terminer la session en cours",
+  },
+  ar: {
+    title: "تسجيل الخروج؟",
+    description: "سيتم إنهاء الجلسة الحالية في مساحة العمل.",
+    confirmLabel: "تسجيل الخروج",
+    cancelLabel: "إلغاء",
+    label: "تسجيل الخروج",
+    hint: "إنهاء الجلسة الحالية",
+  },
+  pt: {
+    title: "Sair?",
+    description: "A sessao atual deste espaco sera encerrada.",
+    confirmLabel: "Sair",
+    cancelLabel: "Cancelar",
+    label: "Sair",
+    hint: "Encerrar a sessao atual",
+  },
+} as const;
+
 export function SidebarNav({ language }: SidebarNavProps) {
   const pathname = usePathname();
   const dashboardNavItems = getDashboardNavItems(language);
+  const logoutCopy = LOGOUT_COPY[language];
 
   return (
     <nav className="space-y-2">
@@ -72,9 +108,10 @@ export function SidebarNav({ language }: SidebarNavProps) {
 
       <form action="/logout" method="post" className="pt-2">
         <ConfirmSubmitButton
-          title="Logout?"
-          description="You will be signed out of the current workspace session."
-          confirmLabel="Logout"
+          title={logoutCopy.title}
+          description={logoutCopy.description}
+          confirmLabel={logoutCopy.confirmLabel}
+          cancelLabel={logoutCopy.cancelLabel}
           className="flex w-full items-center gap-3 rounded-2xl border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-subtle)] px-4 py-3 text-left text-[color:var(--dashboard-body)] transition hover:border-[color:var(--dashboard-border-strong)] hover:bg-[color:var(--dashboard-surface-muted)] hover:text-[color:var(--dashboard-heading)]"
           confirmClassName="dashboard-button-primary rounded-full px-4 py-2.5 text-sm font-medium"
         >
@@ -82,9 +119,9 @@ export function SidebarNav({ language }: SidebarNavProps) {
             <FontAwesomeIcon icon={faRightFromBracket} />
           </span>
           <span className="block">
-            <span className="block text-sm font-semibold tracking-wide">Logout</span>
+            <span className="block text-sm font-semibold tracking-wide">{logoutCopy.label}</span>
             <span className="mt-1 block text-xs text-[color:var(--dashboard-muted-text)]">
-              End the current session
+              {logoutCopy.hint}
             </span>
           </span>
         </ConfirmSubmitButton>

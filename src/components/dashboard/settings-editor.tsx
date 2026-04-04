@@ -78,26 +78,26 @@ const PAGE_COPY = {
     applyingLabel: "Application...",
   },
   ar: {
-    eyebrow: "Settings",
-    title: "Adjust language and appearance",
-    description: "Choose the dashboard language and switch between dark and light mode.",
-    currentTitle: "Current preferences",
-    languageLabel: "Language",
-    directionLabel: "Direction",
-    themeLabel: "Theme",
-    languageSectionTitle: "Language",
-    languageSectionDescription: "Arabic switches the interface to right-to-left.",
-    languagesCount: "4 languages available",
-    themePanelTitle: "Theme",
-    themePanelDescription: "Switch the whole dashboard between dark and light mode.",
-    changesTitle: "What changes now",
+    eyebrow: "الاعدادات",
+    title: "تعديل اللغة والمظهر",
+    description: "اختر لغة لوحة التحكم وبدل بين الوضع الداكن والفاتح.",
+    currentTitle: "التفضيلات الحالية",
+    languageLabel: "اللغة",
+    directionLabel: "الاتجاه",
+    themeLabel: "المظهر",
+    languageSectionTitle: "اللغة",
+    languageSectionDescription: "اختيار العربية يجعل الواجهة من اليمين الى اليسار تلقائيا.",
+    languagesCount: "4 لغات متاحة",
+    themePanelTitle: "المظهر",
+    themePanelDescription: "بدل لوحة التحكم بالكامل بين الوضع الداكن والفاتح.",
+    changesTitle: "ما الذي يتغير الآن",
     changes: [
-      "The selected language updates page direction after refresh.",
-      "Arabic activates RTL automatically.",
-      "Theme changes the full dashboard look instantly.",
+      "اللغة المختارة تحدث التنقل واتجاه الصفحة.",
+      "العربية تفعل اتجاه RTL تلقائيا.",
+      "المظهر يغير البطاقات والاسطح والطابع العام فورا.",
     ],
-    applyLabel: "Save settings",
-    applyingLabel: "Applying...",
+    applyLabel: "حفظ الاعدادات",
+    applyingLabel: "جار التطبيق...",
   },
   pt: {
     eyebrow: "Configuracoes",
@@ -110,14 +110,14 @@ const PAGE_COPY = {
     themeLabel: "Tema",
     languageSectionTitle: "Idioma",
     languageSectionDescription:
-      "Arabic switches the interface to right-to-left. The others stay left-to-right.",
+      "O arabe muda automaticamente a interface para direita e esquerda. Os outros permanecem da esquerda para a direita.",
     languagesCount: "4 idiomas disponiveis",
     themePanelTitle: "Tema",
     themePanelDescription: "Troque todo o dashboard entre visual escuro e claro.",
     changesTitle: "O que muda agora",
     changes: [
       "O idioma escolhido atualiza a navegacao e a direcao da pagina.",
-      "Arabic ativa RTL automaticamente.",
+      "O arabe ativa RTL automaticamente.",
       "O tema muda cards, botoes e superficies do dashboard.",
     ],
     applyLabel: "Salvar configuracoes",
@@ -145,6 +145,58 @@ const PAGE_COPY = {
   }
 >;
 
+const LANGUAGE_OPTION_COPY: Record<
+  AppLanguage,
+  Record<AppLanguage, { label: string; description: string }>
+> = {
+  en: {
+    en: { label: "English", description: "Default dashboard language" },
+    fr: { label: "French", description: "French interface" },
+    ar: { label: "Arabic", description: "RTL dashboard language" },
+    pt: { label: "Portuguese", description: "Portuguese interface" },
+  },
+  fr: {
+    en: { label: "Anglais", description: "Langue par defaut du dashboard" },
+    fr: { label: "Francais", description: "Interface francaise" },
+    ar: { label: "Arabe", description: "Dashboard en lecture RTL" },
+    pt: { label: "Portugais", description: "Interface portugaise" },
+  },
+  ar: {
+    en: { label: "الانجليزية", description: "لغة اللوحة الافتراضية" },
+    fr: { label: "الفرنسية", description: "واجهة فرنسية" },
+    ar: { label: "العربية", description: "واجهة من اليمين الى اليسار" },
+    pt: { label: "البرتغالية", description: "واجهة برتغالية" },
+  },
+  pt: {
+    en: { label: "Ingles", description: "Idioma padrao do dashboard" },
+    fr: { label: "Frances", description: "Interface em frances" },
+    ar: { label: "Arabe", description: "Dashboard em RTL" },
+    pt: { label: "Portugues", description: "Interface em portugues" },
+  },
+};
+
+const THEME_OPTION_COPY: Record<
+  AppLanguage,
+  Record<ThemePreference, { label: string; description: string }>
+> = {
+  en: {
+    dark: { label: "Dark", description: "Current control tower look" },
+    light: { label: "Light", description: "Bright daytime dashboard" },
+  },
+  fr: {
+    dark: { label: "Sombre", description: "Style actuel de la control tower" },
+    light: { label: "Clair", description: "Dashboard clair en journee" },
+  },
+  ar: {
+    dark: { label: "داكن", description: "مظهر برج التحكم الحالي" },
+    light: { label: "فاتح", description: "واجهة نهارية مضيئة" },
+  },
+  pt: {
+    dark: { label: "Escuro", description: "Visual atual da control tower" },
+    light: { label: "Claro", description: "Dashboard claro para o dia" },
+  },
+};
+
 function buildFormData(language: AppLanguage, theme: ThemePreference) {
   const formData = new FormData();
   formData.set("language", language);
@@ -162,6 +214,8 @@ export function SettingsEditor({
   const [isPending, startTransition] = useTransition();
   const copy = PAGE_COPY[language];
   const direction = resolveLanguageDirection(language);
+  const languageOptionCopy = LANGUAGE_OPTION_COPY[language];
+  const themeOptionCopy = THEME_OPTION_COPY[language];
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -209,7 +263,7 @@ export function SettingsEditor({
               </p>
             </div>
             <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
-              {LANGUAGE_OPTIONS.find((option) => option.value === language)?.label}
+              {languageOptionCopy[language].label}
             </p>
           </div>
           <div className="dashboard-soft-card rounded-[24px] p-5">
@@ -231,7 +285,7 @@ export function SettingsEditor({
               </p>
             </div>
             <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
-              {THEME_OPTIONS.find((option) => option.value === theme)?.label}
+              {themeOptionCopy[theme].label}
             </p>
           </div>
         </div>
@@ -272,10 +326,10 @@ export function SettingsEditor({
                       </span>
                       <div>
                         <p className="text-base font-semibold text-[color:var(--dashboard-heading)]">
-                          {option.label}
+                          {languageOptionCopy[option.value].label}
                         </p>
                         <p className="mt-1 text-sm text-[color:var(--dashboard-muted-text)]">
-                          {option.description}
+                          {languageOptionCopy[option.value].description}
                         </p>
                       </div>
                     </div>
@@ -333,10 +387,10 @@ export function SettingsEditor({
                           </span>
                           <div>
                             <p className="text-sm font-semibold text-[color:var(--dashboard-heading)]">
-                              {option.label}
+                              {themeOptionCopy[option.value].label}
                             </p>
                             <p className="mt-1 text-xs text-[color:var(--dashboard-muted-text)]">
-                              {option.description}
+                              {themeOptionCopy[option.value].description}
                             </p>
                           </div>
                         </div>

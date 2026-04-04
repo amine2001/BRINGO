@@ -81,6 +81,15 @@ export function formatRepeatedReminderMessage(input: ReminderMessageInput) {
 }
 
 export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInput) {
+  if (input.stage === 'preparation_overdue') {
+    return [
+      '⏰ RETARD PRÉPARATION',
+      `🏪 Magasin: ${normalizeText(input.storeName)}`,
+      `🆔 Commande: ${normalizeText(input.orderId)}`,
+      `⏰ Retard: +${Math.max(0, Number(input.overdueMinutes ?? 0))} min`
+    ].join('\n')
+  }
+
   const reminderCount = Number.isFinite(input.reminderCount) ? input.reminderCount : 1
   const productCount = formatOptionalCount('Products', input.productCount)
   const overdueMinutes = formatOptionalCount('Overdue', input.overdueMinutes)
