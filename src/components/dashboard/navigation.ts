@@ -22,9 +22,9 @@ export function getDashboardNavItems(): DashboardNavItem[] {
       description: "Chat targets and mappings",
     },
     {
-      href: "/dashboard/notification-settings",
-      label: "Notification Settings",
-      description: "Repeat cadence and stop rules",
+      href: "/dashboard/workflow",
+      label: "Workflow",
+      description: "Stages, timings, and reminder rules",
     },
     {
       href: "/dashboard/delay-settings",

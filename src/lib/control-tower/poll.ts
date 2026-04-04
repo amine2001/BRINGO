@@ -15,6 +15,7 @@ import {
   ordersCache,
   storeGroupMapping,
   telegramGroups,
+  workflowSettings,
   type OrderCacheRow,
 } from "@/lib/db";
 import {
@@ -22,7 +23,10 @@ import {
   evaluateDelayAlert,
 } from "@/lib/delay";
 import { writeErrorLog, writeInfoLog, writeWarnLog } from "@/lib/logs/service";
-import { evaluateNotificationWorkflow } from "@/lib/notifications";
+import {
+  evaluateNotificationWorkflow,
+  resolveNotificationWorkflowConfig,
+} from "@/lib/notifications";
 import { processOrders } from "@/lib/orders";
 import { createRedashClient, extractOrderLifecycleMetadata } from "@/lib/redash";
 import {
@@ -57,6 +61,7 @@ type CompanyBundle = {
   companyName: string;
   apiConfig: typeof apiConfig.$inferSelect;
   delaySettings: typeof delaySettings.$inferSelect | null;
+  workflowSettings: typeof workflowSettings.$inferSelect | null;
   deliveryTypeMappings: Array<typeof deliveryTypeMapping.$inferSelect>;
   groupMappings: Array<
     typeof storeGroupMapping.$inferSelect & {
@@ -165,7 +170,7 @@ async function dispatchOrderNotifications(
     lastReminderSentAt: row.lastReminderSentAt?.getTime() ?? null,
     remindersSent: row.remindersSent,
     previousStatus,
-  });
+  }, resolveNotificationWorkflowConfig(bundle.workflowSettings));
 
   const pendingUpdates: Partial<typeof ordersCache.$inferInsert> = {
     nextReminderAt: workflow.nextReminderAt
@@ -371,6 +376,12 @@ async function loadCompanyBundle(
     .where(and(eq(delaySettings.companyId, companyId), eq(delaySettings.isActive, true)))
     .limit(1);
 
+  const [workflowSettingsRow] = await db
+    .select()
+    .from(workflowSettings)
+    .where(eq(workflowSettings.companyId, companyId))
+    .limit(1);
+
   const [deliveryTypeRows, mappingRows] = await Promise.all([
     db
       .select()
@@ -403,6 +414,7 @@ async function loadCompanyBundle(
     companyName: company.name,
     apiConfig: apiConfigRow,
     delaySettings: delaySettingsRow ?? null,
+    workflowSettings: workflowSettingsRow ?? null,
     deliveryTypeMappings: deliveryTypeRows,
     groupMappings: mappingRows,
   };

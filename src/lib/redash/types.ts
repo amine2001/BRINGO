@@ -10,7 +10,6 @@ export interface OrderLifecycleMetadata {
   delivery_state: string | null;
   picker_state: string | null;
   delivery_alert_active: boolean;
-  expected_preparation_minutes: number | null;
 }
 
 export interface RedashClientConfig {

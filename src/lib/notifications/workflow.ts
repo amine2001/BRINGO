@@ -4,14 +4,26 @@ import type { OrderLifecycleMetadata } from "@/lib/redash";
 import { clampNonNegative, normalizeStatus, resolveEpochMs } from "./utils";
 import type { TimeLike } from "./types";
 
-const ACCEPTANCE_GRACE_MS = 3 * 60 * 1000;
-const REMINDER_INTERVAL_MS = 2 * 60 * 1000;
-const DEFAULT_PREPARATION_MINUTES = 2;
+export const DEFAULT_NOTIFICATION_WORKFLOW_CONFIG = {
+  acceptanceGraceMinutes: 3,
+  acceptanceReminderIntervalMinutes: 2,
+  preparationMinutesPerProduct: 2,
+  preparationReminderIntervalMinutes: 2,
+  deliveryAlertReminderIntervalMinutes: 2,
+} as const;
 
 export type NotificationWorkflowStage =
   | "waiting_acceptance"
   | "preparation_overdue"
   | "delivery_alert";
+
+export interface NotificationWorkflowConfig {
+  acceptanceGraceMinutes: number;
+  acceptanceReminderIntervalMinutes: number;
+  preparationMinutesPerProduct: number;
+  preparationReminderIntervalMinutes: number;
+  deliveryAlertReminderIntervalMinutes: number;
+}
 
 export interface NotificationWorkflowState {
   createdAt: TimeLike;
@@ -35,14 +47,70 @@ export interface NotificationWorkflowEvaluation {
   productCount: number | null;
 }
 
+function clampPositiveMinutes(value: number | null | undefined, fallback: number) {
+  if (!Number.isFinite(value) || (value ?? 0) <= 0) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.trunc(value as number));
+}
+
 function isDeliveredStatus(status: OrderStatus | null | undefined) {
   return normalizeStatus(status) === "delivered";
+}
+
+function resolvePreparationProductCount(lifecycle: OrderLifecycleMetadata) {
+  const count = lifecycle.product_count ?? lifecycle.final_product_count;
+  return count && count > 0 ? Math.trunc(count) : 1;
+}
+
+function resolveReminderIntervalMs(
+  stage: NotificationWorkflowStage,
+  config: NotificationWorkflowConfig,
+) {
+  const minutes =
+    stage === "waiting_acceptance"
+      ? config.acceptanceReminderIntervalMinutes
+      : stage === "preparation_overdue"
+        ? config.preparationReminderIntervalMinutes
+        : config.deliveryAlertReminderIntervalMinutes;
+
+  return minutes * 60 * 1000;
+}
+
+export function resolveNotificationWorkflowConfig(
+  config?: Partial<NotificationWorkflowConfig> | null,
+): NotificationWorkflowConfig {
+  return {
+    acceptanceGraceMinutes: clampPositiveMinutes(
+      config?.acceptanceGraceMinutes,
+      DEFAULT_NOTIFICATION_WORKFLOW_CONFIG.acceptanceGraceMinutes,
+    ),
+    acceptanceReminderIntervalMinutes: clampPositiveMinutes(
+      config?.acceptanceReminderIntervalMinutes,
+      DEFAULT_NOTIFICATION_WORKFLOW_CONFIG.acceptanceReminderIntervalMinutes,
+    ),
+    preparationMinutesPerProduct: clampPositiveMinutes(
+      config?.preparationMinutesPerProduct,
+      DEFAULT_NOTIFICATION_WORKFLOW_CONFIG.preparationMinutesPerProduct,
+    ),
+    preparationReminderIntervalMinutes: clampPositiveMinutes(
+      config?.preparationReminderIntervalMinutes,
+      DEFAULT_NOTIFICATION_WORKFLOW_CONFIG.preparationReminderIntervalMinutes,
+    ),
+    deliveryAlertReminderIntervalMinutes: clampPositiveMinutes(
+      config?.deliveryAlertReminderIntervalMinutes,
+      DEFAULT_NOTIFICATION_WORKFLOW_CONFIG.deliveryAlertReminderIntervalMinutes,
+    ),
+  };
 }
 
 export function evaluateNotificationWorkflow(
   lifecycle: OrderLifecycleMetadata,
   state: NotificationWorkflowState,
+  config?: Partial<NotificationWorkflowConfig> | null,
 ): NotificationWorkflowEvaluation {
+  const resolvedConfig = resolveNotificationWorkflowConfig(config);
   const nowMs = resolveEpochMs(state.now);
   const createdAtMs = resolveEpochMs(state.createdAt, nowMs);
   const initialSentAt = state.initialSentAt ? resolveEpochMs(state.initialSentAt) : null;
@@ -54,6 +122,9 @@ export function evaluateNotificationWorkflow(
   const previousStatus = normalizeStatus(state.previousStatus);
   const statusChanged = previousStatus !== "" && previousStatus !== currentStatus;
   const shouldSendInitial = !initialSentAt && !isDeliveredStatus(state.status);
+  const productCount = lifecycle.product_count ?? lifecycle.final_product_count;
+  const expectedPreparationMinutes =
+    resolvePreparationProductCount(lifecycle) * resolvedConfig.preparationMinutesPerProduct;
 
   if (isDeliveredStatus(state.status)) {
     return {
@@ -64,8 +135,8 @@ export function evaluateNotificationWorkflow(
       reminderCount: 0,
       nextReminderAt: null,
       overdueMinutes: null,
-      expectedPreparationMinutes: lifecycle.expected_preparation_minutes,
-      productCount: lifecycle.product_count ?? lifecycle.final_product_count,
+      expectedPreparationMinutes,
+      productCount,
     };
   }
 
@@ -74,11 +145,9 @@ export function evaluateNotificationWorkflow(
 
   if (currentStatus === "new" && !lifecycle.accepted_at) {
     stage = "waiting_acceptance";
-    dueAt = createdAtMs + ACCEPTANCE_GRACE_MS;
+    dueAt = createdAtMs + resolvedConfig.acceptanceGraceMinutes * 60 * 1000;
   } else if (currentStatus === "accepted" && !lifecycle.preparation_ended_at) {
     const acceptedAtMs = resolveEpochMs(lifecycle.accepted_at ?? state.createdAt, createdAtMs);
-    const expectedPreparationMinutes =
-      lifecycle.expected_preparation_minutes ?? DEFAULT_PREPARATION_MINUTES;
     stage = "preparation_overdue";
     dueAt = acceptedAtMs + expectedPreparationMinutes * 60 * 1000;
   } else if (currentStatus === "prepared" && lifecycle.delivery_alert_active) {
@@ -95,11 +164,12 @@ export function evaluateNotificationWorkflow(
       reminderCount: 0,
       nextReminderAt: null,
       overdueMinutes: null,
-      expectedPreparationMinutes: lifecycle.expected_preparation_minutes,
-      productCount: lifecycle.product_count ?? lifecycle.final_product_count,
+      expectedPreparationMinutes,
+      productCount,
     };
   }
 
+  const reminderIntervalMs = resolveReminderIntervalMs(stage, resolvedConfig);
   const resetReminderState = statusChanged;
   const normalizedLastReminderSentAt = resetReminderState ? null : lastReminderSentAt;
   const normalizedRemindersSent = resetReminderState ? 0 : remindersSent;
@@ -112,17 +182,17 @@ export function evaluateNotificationWorkflow(
       shouldSendReminder: false,
       resetReminderState,
       reminderCount: normalizedRemindersSent,
-      nextReminderAt: isDue ? nowMs + REMINDER_INTERVAL_MS : dueAt,
+      nextReminderAt: isDue ? nowMs + reminderIntervalMs : dueAt,
       overdueMinutes: isDue ? Math.max(0, Math.floor((nowMs - dueAt) / 60_000)) : null,
-      expectedPreparationMinutes: lifecycle.expected_preparation_minutes,
-      productCount: lifecycle.product_count ?? lifecycle.final_product_count,
+      expectedPreparationMinutes,
+      productCount,
     };
   }
 
   const shouldSendReminder =
     isDue &&
     (!normalizedLastReminderSentAt ||
-      nowMs >= normalizedLastReminderSentAt + REMINDER_INTERVAL_MS);
+      nowMs >= normalizedLastReminderSentAt + reminderIntervalMs);
 
   return {
     stage,
@@ -133,10 +203,10 @@ export function evaluateNotificationWorkflow(
     nextReminderAt: !isDue
       ? dueAt
       : shouldSendReminder
-        ? nowMs + REMINDER_INTERVAL_MS
-        : (normalizedLastReminderSentAt ?? nowMs) + REMINDER_INTERVAL_MS,
+        ? nowMs + reminderIntervalMs
+        : (normalizedLastReminderSentAt ?? nowMs) + reminderIntervalMs,
     overdueMinutes: isDue ? Math.max(0, Math.floor((nowMs - dueAt) / 60_000)) : null,
-    expectedPreparationMinutes: lifecycle.expected_preparation_minutes,
-    productCount: lifecycle.product_count ?? lifecycle.final_product_count,
+    expectedPreparationMinutes,
+    productCount,
   };
 }

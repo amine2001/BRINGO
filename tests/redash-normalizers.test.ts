@@ -88,6 +88,5 @@ describe("redash normalizers", () => {
     expect(lifecycle.final_product_count).toBe(4);
     expect(lifecycle.delivery_state).toBe("alert");
     expect(lifecycle.delivery_alert_active).toBe(true);
-    expect(lifecycle.expected_preparation_minutes).toBe(10);
   });
 });

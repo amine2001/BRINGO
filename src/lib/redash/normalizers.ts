@@ -175,7 +175,6 @@ export function extractOrderLifecycleMetadata(record: LooseRecord): OrderLifecyc
   const finalProductCount = toPositiveInt(pickValue(rec, FINAL_PRODUCT_COUNT_KEYS));
   const deliveryState = normalizeState(pickValue(rec, DELIVERY_STATE_KEYS));
   const pickerState = normalizeState(pickValue(rec, PICKER_STATE_KEYS));
-  const expectedProductCount = productCount ?? finalProductCount;
 
   return {
     accepted_at: acceptedAt,
@@ -186,9 +185,6 @@ export function extractOrderLifecycleMetadata(record: LooseRecord): OrderLifecyc
     picker_state: pickerState,
     delivery_alert_active:
       deliveryState === "alert" || pickerState === "alert",
-    expected_preparation_minutes: expectedProductCount
-      ? Math.max(1, expectedProductCount) * 2
-      : null,
   };
 }
 

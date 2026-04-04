@@ -12,6 +12,7 @@ import {
   stores,
   telegramGroups,
   users,
+  workflowSettings,
 } from "./schema";
 
 export type Company = InferSelectModel<typeof companies>;
@@ -40,6 +41,9 @@ export type NewApiConfig = InferInsertModel<typeof apiConfig>;
 
 export type NotificationSettings = InferSelectModel<typeof notificationSettings>;
 export type NewNotificationSettings = InferInsertModel<typeof notificationSettings>;
+
+export type WorkflowSettings = InferSelectModel<typeof workflowSettings>;
+export type NewWorkflowSettings = InferInsertModel<typeof workflowSettings>;
 
 export type DelaySettings = InferSelectModel<typeof delaySettings>;
 export type NewDelaySettings = InferInsertModel<typeof delaySettings>;

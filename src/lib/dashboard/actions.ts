@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import {
   apiConfig,
@@ -9,11 +9,11 @@ import {
   delaySettings,
   deliveryTypeMapping,
   getDb,
-  notificationSettings,
   storeGroupMapping,
   stores,
   telegramGroups,
   users,
+  workflowSettings,
   type DeliveryType,
 } from "@/lib/db";
 import { isUserRole, type UserRole } from "@/lib/auth/roles";
@@ -68,6 +68,7 @@ function revalidateDashboard() {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/stores");
   revalidatePath("/dashboard/telegram-groups");
+  revalidatePath("/dashboard/workflow");
   revalidatePath("/dashboard/notification-settings");
   revalidatePath("/dashboard/delay-settings");
   revalidatePath("/dashboard/api-config");
@@ -445,63 +446,65 @@ export async function saveTelegramGroupAction(formData: FormData) {
   revalidateDashboard();
 }
 
-export async function saveNotificationSettingsAction(formData: FormData) {
+export async function saveWorkflowSettingsAction(formData: FormData) {
   const context = await requireCompanyContext();
   const db = getDb();
 
-  const storeId = asOptionalString(formData.get("storeId"));
-  const deliveryType = asOptionalString(formData.get("deliveryType")) as
-    | DeliveryType
-    | null;
-  const repeatCount = asPositiveInt(formData.get("repeatCount"), 3);
-  const intervalSeconds = asPositiveInt(formData.get("intervalSeconds"), 300);
-  const stopCondition = asString(formData.get("stopCondition"));
-
-  const stopOnAccepted =
-    stopCondition === "accepted" || stopCondition === "accepted_or_delivered";
-  const stopOnDelivered =
-    stopCondition === "delivered" || stopCondition === "accepted_or_delivered";
+  const acceptanceGraceMinutes = asPositiveInt(formData.get("acceptanceGraceMinutes"), 3);
+  const acceptanceReminderIntervalMinutes = asPositiveInt(
+    formData.get("acceptanceReminderIntervalMinutes"),
+    2,
+  );
+  const preparationMinutesPerProduct = asPositiveInt(
+    formData.get("preparationMinutesPerProduct"),
+    2,
+  );
+  const preparationReminderIntervalMinutes = asPositiveInt(
+    formData.get("preparationReminderIntervalMinutes"),
+    2,
+  );
+  const deliveryAlertReminderIntervalMinutes = asPositiveInt(
+    formData.get("deliveryAlertReminderIntervalMinutes"),
+    2,
+  );
 
   const existing = await db
     .select()
-    .from(notificationSettings)
-    .where(
-      and(
-        eq(notificationSettings.companyId, context.company.id),
-        storeId ? eq(notificationSettings.storeId, storeId) : isNull(notificationSettings.storeId),
-        deliveryType
-          ? eq(notificationSettings.deliveryType, deliveryType)
-          : isNull(notificationSettings.deliveryType),
-      ),
-    )
+    .from(workflowSettings)
+    .where(eq(workflowSettings.companyId, context.company.id))
     .limit(1)
     .then((rows) => rows[0] ?? null);
 
   if (existing) {
     await db
-      .update(notificationSettings)
+      .update(workflowSettings)
       .set({
-        repeatCount,
-        intervalSeconds,
-        stopOnAccepted,
-        stopOnDelivered,
-        isActive: true,
+        acceptanceGraceMinutes,
+        acceptanceReminderIntervalMinutes,
+        preparationMinutesPerProduct,
+        preparationReminderIntervalMinutes,
+        deliveryAlertReminderIntervalMinutes,
         updatedAt: new Date(),
       })
-      .where(eq(notificationSettings.id, existing.id));
+      .where(eq(workflowSettings.id, existing.id));
   } else {
-    await db.insert(notificationSettings).values({
+    await db.insert(workflowSettings).values({
       companyId: context.company.id,
-      storeId,
-      deliveryType,
-      repeatCount,
-      intervalSeconds,
-      stopOnAccepted,
-      stopOnDelivered,
-      isActive: true,
+      acceptanceGraceMinutes,
+      acceptanceReminderIntervalMinutes,
+      preparationMinutesPerProduct,
+      preparationReminderIntervalMinutes,
+      deliveryAlertReminderIntervalMinutes,
     });
   }
 
+  await writeInfoLog(context.company.id, "system", "Updated workflow timings.", {
+    acceptanceGraceMinutes,
+    acceptanceReminderIntervalMinutes,
+    preparationMinutesPerProduct,
+    preparationReminderIntervalMinutes,
+    deliveryAlertReminderIntervalMinutes,
+  });
   revalidateDashboard();
 }
 

@@ -301,6 +301,58 @@ export const notificationSettings = pgTable(
   ]
 );
 
+export const workflowSettings = pgTable(
+  "workflow_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    acceptanceGraceMinutes: integer("acceptance_grace_minutes").notNull().default(3),
+    acceptanceReminderIntervalMinutes: integer("acceptance_reminder_interval_minutes")
+      .notNull()
+      .default(2),
+    preparationMinutesPerProduct: integer("preparation_minutes_per_product")
+      .notNull()
+      .default(2),
+    preparationReminderIntervalMinutes: integer("preparation_reminder_interval_minutes")
+      .notNull()
+      .default(2),
+    deliveryAlertReminderIntervalMinutes: integer("delivery_alert_reminder_interval_minutes")
+      .notNull()
+      .default(2),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique("workflow_settings_company_uniq").on(table.companyId),
+    check(
+      "workflow_settings_acceptance_grace_check",
+      sql`${table.acceptanceGraceMinutes} between 1 and 180`,
+    ),
+    check(
+      "workflow_settings_acceptance_interval_check",
+      sql`${table.acceptanceReminderIntervalMinutes} between 1 and 180`,
+    ),
+    check(
+      "workflow_settings_preparation_minutes_per_product_check",
+      sql`${table.preparationMinutesPerProduct} between 1 and 60`,
+    ),
+    check(
+      "workflow_settings_preparation_interval_check",
+      sql`${table.preparationReminderIntervalMinutes} between 1 and 180`,
+    ),
+    check(
+      "workflow_settings_delivery_alert_interval_check",
+      sql`${table.deliveryAlertReminderIntervalMinutes} between 1 and 180`,
+    ),
+  ]
+);
+
 export const delaySettings = pgTable(
   "delay_settings",
   {

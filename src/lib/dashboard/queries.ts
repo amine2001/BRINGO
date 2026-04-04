@@ -17,14 +17,15 @@ import {
   delaySettings,
   deliveryTypeMapping,
   getDb,
-  notificationSettings,
   ordersCache,
   storeGroupMapping,
   stores,
   telegramGroups,
   users,
+  workflowSettings,
 } from "@/lib/db";
 import { listRecentLogs } from "@/lib/logs/service";
+import { DEFAULT_NOTIFICATION_WORKFLOW_CONFIG } from "@/lib/notifications";
 
 function labelStatus(status: string) {
   return status.replace(/_/g, " ");
@@ -171,30 +172,26 @@ export async function getTelegramGroupsPageData(companyId: string) {
   };
 }
 
-export async function getNotificationSettingsPageData(companyId: string) {
+export async function getWorkflowPageData(companyId: string) {
   const db = getDb();
 
-  const [settingsRows, storeRows] = await Promise.all([
-    db
-      .select()
-      .from(notificationSettings)
-      .where(eq(notificationSettings.companyId, companyId))
-      .orderBy(desc(notificationSettings.updatedAt)),
-    db
-      .select()
-      .from(stores)
-      .where(eq(stores.companyId, companyId))
-      .orderBy(asc(stores.name)),
-  ]);
+  const [settingsRow] = await db
+    .select()
+    .from(workflowSettings)
+    .where(eq(workflowSettings.companyId, companyId))
+    .limit(1);
 
   return {
-    settings: settingsRows.map((settings) => ({
-      ...settings,
-      storeName:
-        storeRows.find((store) => store.id === settings.storeId)?.name ??
-        "Global default",
-    })),
-    stores: storeRows,
+    settings: settingsRow
+      ? {
+          acceptanceGraceMinutes: settingsRow.acceptanceGraceMinutes,
+          acceptanceReminderIntervalMinutes: settingsRow.acceptanceReminderIntervalMinutes,
+          preparationMinutesPerProduct: settingsRow.preparationMinutesPerProduct,
+          preparationReminderIntervalMinutes: settingsRow.preparationReminderIntervalMinutes,
+          deliveryAlertReminderIntervalMinutes: settingsRow.deliveryAlertReminderIntervalMinutes,
+        }
+      : DEFAULT_NOTIFICATION_WORKFLOW_CONFIG,
+    isCustom: Boolean(settingsRow),
   };
 }
 
