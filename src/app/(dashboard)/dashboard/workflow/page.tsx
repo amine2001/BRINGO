@@ -14,6 +14,7 @@ export default async function WorkflowPage() {
     {
       step: "01",
       title: "Order received",
+      tone: "info" as const,
       description:
         "When a new order appears the Telegram alert is sent immediately.",
       details: [
@@ -24,6 +25,7 @@ export default async function WorkflowPage() {
     {
       step: "02",
       title: "Waiting acceptance",
+      tone: "warn" as const,
       description:
         "If acceptance is still missing reminders repeat until prep starts.",
       details: [
@@ -34,6 +36,7 @@ export default async function WorkflowPage() {
     {
       step: "03",
       title: "Preparation SLA",
+      tone: "good" as const,
       description:
         "The preparation SLA is based on product count and minutes per product.",
       details: [
@@ -44,6 +47,7 @@ export default async function WorkflowPage() {
     {
       step: "04",
       title: "Delivery alert",
+      tone: "danger" as const,
       description:
         "After preparation ends alert repeats until the order is marked complete.",
       details: [
@@ -66,18 +70,27 @@ export default async function WorkflowPage() {
         description="Each stage shows when notifications start, what condition keeps them active, and what clears the alert."
       >
         <div className="grid gap-4 xl:grid-cols-4">
-          {steps.map((item) => (
-            <div
-              key={item.step}
-              className="dashboard-soft-card relative h-full overflow-hidden rounded-[26px] p-5"
-            >
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
-              <div className="relative flex h-full flex-col">
-                <div className="flex flex-col items-start gap-3">
-                  <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
-                    STEP {item.step}
-                  </span>
-                  <StatusPill tone="info">{item.title}</StatusPill>
+          {steps.map((item, idx) => {
+            const gradient =
+              [
+                "bg-gradient-to-b from-[#0c1f2d] to-[#132b3c]",
+                "bg-gradient-to-b from-[#0b1d2a] to-[#123244]",
+                "bg-gradient-to-b from-[#0a1b28] to-[#113649]",
+                "bg-gradient-to-b from-[#0a1a26] to-[#103a4f]",
+              ][idx] ?? "bg-[color:var(--dashboard-surface)]";
+
+            return (
+              <div
+                key={item.step}
+                className={`dashboard-soft-card relative h-full overflow-hidden rounded-[26px] p-5 ${gradient}`}
+              >
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_55%)]" />
+                <div className="relative flex h-full flex-col">
+                  <div className="flex flex-col items-start gap-3">
+                    <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
+                      STEP {item.step}
+                    </span>
+                  <StatusPill tone={item.tone}>{item.title}</StatusPill>
                 </div>
                 <p className="mt-3 min-h-[72px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
@@ -92,9 +105,10 @@ export default async function WorkflowPage() {
                     </div>
                   ))}
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </SectionCard>
 

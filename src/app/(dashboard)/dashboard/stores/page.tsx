@@ -101,13 +101,6 @@ export default async function StoresPage() {
       />
 
       <SectionCard
-        title="Store registry"
-        description="Operationally relevant fields are surfaced first so future server actions can bind directly to these controls."
-      >
-        <DataTable columns={storeColumns} rows={storeRows} />
-      </SectionCard>
-
-      <SectionCard
         title="Create or update store"
         description="Use this form to configure a store and toggle delivery types without exposing any deprecated slot logic."
       >
@@ -149,6 +142,13 @@ export default async function StoresPage() {
             </button>
           </div>
         </form>
+      </SectionCard>
+
+      <SectionCard
+        title="Store registry"
+        description="Operationally relevant fields are surfaced first so future server actions can bind directly to these controls."
+      >
+        <DataTable columns={storeColumns} rows={storeRows} />
       </SectionCard>
 
       {data.stores.some((store) => store.enabledTypes.length === 0) ? (

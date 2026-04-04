@@ -2,26 +2,41 @@ import { DataTable } from "@/components/dashboard/data-table";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { decodeChatRouting } from "@/lib/delay/chat-routing";
 import { saveDelaySettingsAction } from "@/lib/dashboard/actions";
 import { getDelaySettingsPageData } from "@/lib/dashboard/queries";
 import { requireCompanyContext } from "@/lib/tenant/context";
 
 const thresholdColumns = [
   { key: "threshold", label: "Delay threshold" },
-  { key: "adminChat", label: "Admin Telegram chat" },
+  { key: "opsChat", label: "Acceptance / Prep" },
+  { key: "deliveryChat", label: "Delivery" },
+  { key: "fallbackChat", label: "Fallback" },
   { key: "status", label: "Status" },
 ];
 
 export default async function DelaySettingsPage() {
   const context = await requireCompanyContext();
   const data = await getDelaySettingsPageData(context.company.id);
+  const routing = decodeChatRouting(data.settings?.telegramAdminChatId ?? "");
+
   const thresholdRows = data.settings
     ? [
         {
           threshold: `${data.settings.delayThresholdMinutes} minutes`,
-          adminChat: (
+          opsChat: (
             <span className="font-mono text-xs">
-              {data.settings.telegramAdminChatId}
+              {routing.acceptance ?? routing.preparation ?? "—"}
+            </span>
+          ),
+          deliveryChat: (
+            <span className="font-mono text-xs">
+              {routing.delivery ?? "—"}
+            </span>
+          ),
+          fallbackChat: (
+            <span className="font-mono text-xs">
+              {routing.fallback || "—"}
             </span>
           ),
           status: (
@@ -50,15 +65,35 @@ export default async function DelaySettingsPage() {
 
       <SectionCard
         title="Configure delay alerting"
-        description="Threshold minutes and admin chat identifiers are surfaced together because they work as one operational policy."
+        description="Route acceptance/prep delays and delivery delays to different Telegram recipients while keeping one threshold."
       >
         <form action={saveDelaySettingsAction} className="grid gap-4 lg:grid-cols-2">
           <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">Admin Telegram chat ID</span>
+            <span className="block font-medium text-white">Acceptance &amp; prep chat ID</span>
+            <input
+              name="opsChatId"
+              type="text"
+              defaultValue={routing.acceptance ?? routing.preparation ?? ""}
+              placeholder="-1002176xxxxx"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+            />
+          </label>
+          <label className="space-y-2 text-sm text-slate-300">
+            <span className="block font-medium text-white">Delivery chat ID</span>
+            <input
+              name="deliveryChatId"
+              type="text"
+              defaultValue={routing.delivery ?? ""}
+              placeholder="-1002176xxxxx"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+            />
+          </label>
+          <label className="space-y-2 text-sm text-slate-300">
+            <span className="block font-medium text-white">Fallback / admin chat ID</span>
             <input
               name="telegramAdminChatId"
               type="text"
-              defaultValue={data.settings?.telegramAdminChatId ?? ""}
+              defaultValue={routing.fallback}
               placeholder="-1002176999001"
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
             />

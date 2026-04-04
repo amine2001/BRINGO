@@ -22,6 +22,7 @@ import {
   buildAdminDelayAlertTelegramPayload,
   evaluateDelayAlert,
 } from "@/lib/delay";
+import { resolveChatIdForStatus } from "@/lib/delay/chat-routing";
 import { writeErrorLog, writeInfoLog, writeWarnLog } from "@/lib/logs/service";
 import {
   evaluateNotificationWorkflow,
@@ -315,7 +316,7 @@ async function dispatchDelayAlert(
 
   const payload = buildAdminDelayAlertTelegramPayload(
     decision,
-    bundle.delaySettings.telegramAdminChatId,
+    resolveChatIdForStatus(bundle.delaySettings.telegramAdminChatId, row.status),
   );
 
   const result = await sendTelegramText({

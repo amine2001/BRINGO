@@ -29,15 +29,16 @@ function formatOrderContext(input: {
 }
 
 export function formatNewOrderMessage(input: NewOrderMessageInput) {
-  return (
-    formatHeader('NEW ORDER') +
-    formatOrderContext({
-      storeName: input.storeName,
-      deliveryType: input.deliveryType,
-      orderId: input.orderId,
-      statusLine: `Status: ${normalizeText(input.status).toUpperCase()}`
-    })
-  )
+  const amountText = normalizeText(input.amountMad)
+  const customerText = normalizeText(input.customerName)
+
+  return [
+    '🚨 NOUVELLE COMMANDE',
+    `🏪 Magasin: ${normalizeText(input.storeName)}`,
+    `🆔 Commande: ${normalizeText(input.orderId)}`,
+    `👤 Client: ${customerText}`,
+    `💰 Valeur: ${amountText} MAD`
+  ].join('\n')
 }
 
 function formatOptionalCount(label: string, value: number | null | undefined) {

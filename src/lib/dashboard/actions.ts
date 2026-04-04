@@ -32,6 +32,7 @@ import {
   resolveAppLanguage,
   resolveThemePreference,
 } from "@/lib/settings/preferences";
+import { encodeChatRouting } from "@/lib/delay/chat-routing";
 
 const DELIVERY_TYPES: DeliveryType[] = ["EXPRESS", "MARKET", "HYPER"];
 
@@ -548,12 +549,21 @@ export async function saveDelaySettingsAction(formData: FormData) {
   const db = getDb();
 
   const telegramAdminChatId = asString(formData.get("telegramAdminChatId"));
+  const opsChatId = asOptionalString(formData.get("opsChatId"));
+  const deliveryChatId = asOptionalString(formData.get("deliveryChatId"));
   const delayThresholdMinutes = asPositiveInt(formData.get("delayThresholdMinutes"), 15);
   const enabled = formData.has("enabled") ? asBoolean(formData.get("enabled")) : true;
 
   if (!telegramAdminChatId) {
     throw new Error("Admin Telegram chat ID is required.");
   }
+
+  const encodedChatRouting = encodeChatRouting({
+    fallback: telegramAdminChatId,
+    acceptance: opsChatId ?? undefined,
+    preparation: opsChatId ?? undefined,
+    delivery: deliveryChatId ?? undefined,
+  });
 
   const existing = await db
     .select()
@@ -566,7 +576,7 @@ export async function saveDelaySettingsAction(formData: FormData) {
     await db
       .update(delaySettings)
       .set({
-        telegramAdminChatId,
+        telegramAdminChatId: encodedChatRouting,
         delayThresholdMinutes,
         isActive: enabled,
         updatedAt: new Date(),
@@ -575,7 +585,7 @@ export async function saveDelaySettingsAction(formData: FormData) {
   } else {
     await db.insert(delaySettings).values({
       companyId: context.company.id,
-      telegramAdminChatId,
+      telegramAdminChatId: encodedChatRouting,
       delayThresholdMinutes,
       isActive: enabled,
     });

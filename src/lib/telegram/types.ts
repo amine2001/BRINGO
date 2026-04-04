@@ -13,6 +13,8 @@ export interface TelegramMessageBase {
 
 export interface NewOrderMessageInput extends TelegramMessageBase {
   status: OrderStatus
+  customerName?: string
+  amountMad?: number | string | null
 }
 
 export interface StatusChangeMessageInput extends TelegramMessageBase {

@@ -150,9 +150,15 @@ export function evaluateNotificationWorkflow(
     const acceptedAtMs = resolveEpochMs(lifecycle.accepted_at ?? state.createdAt, createdAtMs);
     stage = "preparation_overdue";
     dueAt = acceptedAtMs + expectedPreparationMinutes * 60 * 1000;
-  } else if (currentStatus === "prepared" && lifecycle.delivery_alert_active) {
-    stage = "delivery_alert";
-    dueAt = nowMs;
+  } else if (currentStatus === "prepared") {
+    if (lifecycle.preparation_ended_at) {
+      stage = "delivery_alert";
+      const prepEndMs = resolveEpochMs(lifecycle.preparation_ended_at, createdAtMs);
+      dueAt = prepEndMs + 20 * 60 * 1000; // start last-mile reminders 20 minutes after prep ends
+    } else if (lifecycle.delivery_alert_active) {
+      stage = "delivery_alert";
+      dueAt = nowMs;
+    }
   }
 
   if (!stage || dueAt === null) {

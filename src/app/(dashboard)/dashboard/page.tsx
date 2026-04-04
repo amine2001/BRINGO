@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { faTruckFast, faBell, faTriangleExclamation, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -32,23 +33,27 @@ export default async function DashboardOverviewPage() {
       label: "Orders in motion",
       value: String(data.metrics.ordersInMotion),
       hint: "Tracked across active stores and delivery types.",
+      icon: faTruckFast,
     },
     {
       label: "Pending reminders",
       value: String(data.metrics.pendingNotifications),
       hint: "Orders still eligible for another reminder.",
       tone: "warn" as const,
+      icon: faBell,
     },
     {
       label: "Delay alerts today",
       value: String(data.metrics.delayAlertsToday),
       hint: "Admin escalations sent since the start of today.",
       tone: "good" as const,
+      icon: faTriangleExclamation,
     },
     {
       label: "Telegram success",
       value: data.metrics.telegramDeliverySuccess,
       hint: "Estimated from the latest operational log window.",
+      icon: faPaperPlane,
     },
   ];
 
