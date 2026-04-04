@@ -35,13 +35,13 @@ export function SidebarNav({ language }: SidebarNavProps) {
             key={item.href}
             href={item.href}
             className={[
-              "group block rounded-2xl border px-4 py-4 transition-all",
+              "group block rounded-2xl border px-4 py-3 transition-all",
               active
                 ? "border-[color:var(--dashboard-nav-active-border)] bg-[color:var(--dashboard-nav-active-bg)] text-[color:var(--dashboard-heading)] shadow-[0_0_0_1px_var(--dashboard-nav-active-ring)]"
                 : "border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-subtle)] text-[color:var(--dashboard-body)] hover:border-[color:var(--dashboard-border-strong)] hover:bg-[color:var(--dashboard-surface-muted)] hover:text-[color:var(--dashboard-heading)]",
             ].join(" ")}
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
               <span
                 className={[
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm transition",
@@ -52,7 +52,19 @@ export function SidebarNav({ language }: SidebarNavProps) {
               >
                 <FontAwesomeIcon icon={item.icon} />
               </span>
-              <span className="block text-sm font-semibold tracking-wide">{item.label}</span>
+              <span className="block">
+                <span className="block text-sm font-semibold tracking-wide">{item.label}</span>
+                <span
+                  className={[
+                    "mt-1 block text-xs",
+                    active
+                      ? "text-[color:var(--dashboard-eyebrow)]"
+                      : "text-[color:var(--dashboard-muted-text)] group-hover:text-[color:var(--dashboard-body)]",
+                  ].join(" ")}
+                >
+                  {item.description}
+                </span>
+              </span>
             </div>
           </Link>
         );
@@ -69,7 +81,12 @@ export function SidebarNav({ language }: SidebarNavProps) {
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface)] text-sm">
             <FontAwesomeIcon icon={faRightFromBracket} />
           </span>
-          <span className="block text-sm font-semibold tracking-wide">Logout</span>
+          <span className="block">
+            <span className="block text-sm font-semibold tracking-wide">Logout</span>
+            <span className="mt-1 block text-xs text-[color:var(--dashboard-muted-text)]">
+              End the current session
+            </span>
+          </span>
         </ConfirmSubmitButton>
       </form>
     </nav>
