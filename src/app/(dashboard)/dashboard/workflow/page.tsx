@@ -59,11 +59,6 @@ export default async function WorkflowPage() {
         eyebrow="Workflow"
         title="Shape and configure the live notification workflow"
         description="This is the real Bringo order workflow: received, not accepted, preparation delay, and delivery alert. The timing values below drive the live poller."
-        actions={
-          <StatusPill tone={data.isCustom ? "good" : "info"}>
-            {data.isCustom ? "Custom workflow active" : "Default workflow active"}
-          </StatusPill>
-        }
       />
 
       <SectionCard
@@ -78,16 +73,16 @@ export default async function WorkflowPage() {
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
               <div className="relative flex h-full flex-col">
-                <div className="flex flex-col items-start gap-4">
+                <div className="flex flex-col items-start gap-3">
                   <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
                     STEP {item.step}
                   </span>
                   <StatusPill tone="info">{item.title}</StatusPill>
                 </div>
-                <p className="mt-4 min-h-[96px] text-sm leading-6 text-[color:var(--dashboard-body)]">
+                <p className="mt-3 min-h-[72px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
                 </p>
-                <div className="mt-5 grid flex-1 grid-rows-2 gap-2">
+                <div className="mt-4 grid flex-1 grid-rows-2 gap-2">
                   {item.details.map((detail) => (
                     <div
                       key={detail}
