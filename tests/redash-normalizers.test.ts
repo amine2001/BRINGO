@@ -49,31 +49,63 @@ describe("redash normalizers", () => {
   });
 
   it("infers accepted and prepared states from Redash preparation timestamps", () => {
-    const acceptedResult = normalizeRedashRecords([
-      {
-        "Order Date": "04/04/26 01:19:37",
-        "Order Number": "330334",
-        Store: "Hyper Al Mazar",
-        Status: "new",
-        "Date d'acceptation prep": "04/04/26 01:25:00",
-        "Delivery Type": "Planned Order",
-      },
-    ]);
+    const acceptedResult = normalizeRedashRecords(
+      [
+        {
+          "Order Date": "04/04/26 01:19:37",
+          "Order Number": "330334",
+          Store: "Hyper Al Mazar",
+          Status: "new",
+          "Date d'acceptation prep": "04/04/26 01:25:00",
+          "Delivery Type": "Planned Order",
+        },
+      ],
+      { referenceTime: new Date("2026-04-04T02:00:00.000Z") },
+    );
 
-    const preparedResult = normalizeRedashRecords([
-      {
-        "Order Date": "04/04/26 01:19:37",
-        "Order Number": "330334",
-        Store: "Hyper Al Mazar",
-        Status: "new",
-        "Date d'acceptation prep": "04/04/26 01:25:00",
-        "Order Preparation End": "04/04/26 01:35:00",
-        "Delivery Type": "Planned Order",
-      },
-    ]);
+    const preparedResult = normalizeRedashRecords(
+      [
+        {
+          "Order Date": "04/04/26 01:19:37",
+          "Order Number": "330334",
+          Store: "Hyper Al Mazar",
+          Status: "new",
+          "Date d'acceptation prep": "04/04/26 01:25:00",
+          "Order Preparation End": "04/04/26 01:35:00",
+          "Delivery Type": "Planned Order",
+        },
+      ],
+      { referenceTime: new Date("2026-04-04T02:00:00.000Z") },
+    );
 
     expect(acceptedResult.normalized[0]?.status).toBe("accepted");
     expect(preparedResult.normalized[0]?.status).toBe("prepared");
+  });
+
+  it("parses Redash slash dates in Africa/Casablanca and keeps future lifecycle timestamps from advancing the status", () => {
+    const result = normalizeRedashRecords(
+      [
+        {
+          "Order Date": "04/04/26 09:50:44",
+          "Order Number": "330406",
+          Store: "Gourmet Velodrome",
+          Status: "new",
+          "Date d'acceptation prep": "04/04/26 10:01:03",
+          "Order Preparation End": "04/04/26 10:21:24",
+          "Delivery Type": "Rapide XL",
+        },
+      ],
+      { referenceTime: new Date("2026-04-04T08:54:00.000Z") },
+    );
+
+    expect(result.normalized[0]?.created_at.toISOString()).toBe("2026-04-04T08:50:44.000Z");
+    expect(result.normalized[0]?.lifecycle.accepted_at?.toISOString()).toBe(
+      "2026-04-04T09:01:03.000Z",
+    );
+    expect(result.normalized[0]?.lifecycle.preparation_ended_at?.toISOString()).toBe(
+      "2026-04-04T09:21:24.000Z",
+    );
+    expect(result.normalized[0]?.status).toBe("new");
   });
 
   it("extracts product counts and delivery alert state from the Redash payload", () => {

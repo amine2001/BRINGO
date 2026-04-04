@@ -3,6 +3,7 @@ import type { DeliveryType, OrderStatus } from "@/lib/db";
 import type { NormalizedOrderRecord, OrderLifecycleMetadata } from "./types";
 
 type LooseRecord = Record<string, unknown>;
+const REDASH_TIME_ZONE = "Africa/Casablanca";
 
 const ORDER_ID_KEYS = ["order_id", "orderid", "id", "order_number", "numero_commande"];
 const STORE_KEYS = ["store_name", "store", "magasin", "storeName"];
@@ -109,6 +110,83 @@ function toPositiveInt(raw: unknown): number | null {
   return Math.floor(value);
 }
 
+function getTimeZoneFormatter(timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+function getTimeZoneDateParts(value: Date, timeZone: string) {
+  const partMap = new Map(
+    getTimeZoneFormatter(timeZone)
+      .formatToParts(value)
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, part.value]),
+  );
+
+  const hour = Number(partMap.get("hour") ?? 0);
+
+  return {
+    year: Number(partMap.get("year") ?? 0),
+    month: Number(partMap.get("month") ?? 1),
+    day: Number(partMap.get("day") ?? 1),
+    hour: hour === 24 ? 0 : hour,
+    minute: Number(partMap.get("minute") ?? 0),
+    second: Number(partMap.get("second") ?? 0),
+  };
+}
+
+function resolveZonedDate(
+  parts: {
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    minute: number;
+    second: number;
+  },
+  timeZone: string,
+): Date {
+  const desiredUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second,
+  );
+
+  let resolvedUtc = desiredUtc;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const observed = getTimeZoneDateParts(new Date(resolvedUtc), timeZone);
+    const observedUtc = Date.UTC(
+      observed.year,
+      observed.month - 1,
+      observed.day,
+      observed.hour,
+      observed.minute,
+      observed.second,
+    );
+    const delta = observedUtc - desiredUtc;
+
+    if (delta === 0) {
+      break;
+    }
+
+    resolvedUtc -= delta;
+  }
+
+  return new Date(resolvedUtc);
+}
+
 function parseSlashDate(raw: string): Date | null {
   const match = raw.match(
     /^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/,
@@ -124,7 +202,17 @@ function parseSlashDate(raw: string): Date | null {
   const minute = Number(match[5] ?? 0);
   const second = Number(match[6] ?? 0);
 
-  const parsed = new Date(year, month - 1, day, hour, minute, second);
+  const parsed = resolveZonedDate(
+    {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    },
+    REDASH_TIME_ZONE,
+  );
   return Number.isNaN(parsed.valueOf()) ? null : parsed;
 }
 
@@ -188,7 +276,15 @@ export function extractOrderLifecycleMetadata(record: LooseRecord): OrderLifecyc
   };
 }
 
-function toStatus(raw: unknown, lifecycle: OrderLifecycleMetadata): OrderStatus | null {
+function hasReachedLifecycleTimestamp(value: Date | null, referenceTime: Date) {
+  return Boolean(value && value.getTime() <= referenceTime.getTime());
+}
+
+function toStatus(
+  raw: unknown,
+  lifecycle: OrderLifecycleMetadata,
+  referenceTime: Date,
+): OrderStatus | null {
   const value = normalizeText(raw);
 
   if (
@@ -207,14 +303,14 @@ function toStatus(raw: unknown, lifecycle: OrderLifecycleMetadata): OrderStatus 
 
   if (
     ["prepared", "preparing", "ready"].includes(value) ||
-    lifecycle.preparation_ended_at
+    hasReachedLifecycleTimestamp(lifecycle.preparation_ended_at, referenceTime)
   ) {
     return "prepared";
   }
 
   if (
     ["accepted", "confirmed", "assigned"].includes(value) ||
-    lifecycle.accepted_at
+    hasReachedLifecycleTimestamp(lifecycle.accepted_at, referenceTime)
   ) {
     return "accepted";
   }
@@ -236,9 +332,17 @@ export interface NormalizationResult {
   warnings: string[];
 }
 
-export function normalizeRedashRecords(input: LooseRecord[]): NormalizationResult {
+export interface NormalizeRedashRecordsOptions {
+  referenceTime?: Date;
+}
+
+export function normalizeRedashRecords(
+  input: LooseRecord[],
+  options: NormalizeRedashRecordsOptions = {},
+): NormalizationResult {
   const warnings: string[] = [];
   const normalized: NormalizedOrderRecord[] = [];
+  const referenceTime = options.referenceTime ?? new Date();
 
   input.forEach((record, index) => {
     const rec = normalizeRecordKeys(record);
@@ -254,7 +358,7 @@ export function normalizeRedashRecords(input: LooseRecord[]): NormalizationResul
     const orderId = orderIdRaw ? String(orderIdRaw).trim() : "";
     const storeName = storeNameRaw ? String(storeNameRaw).trim() : "";
     const deliveryType = toDeliveryType(deliveryTypeRaw, storeNameRaw);
-    const status = toStatus(statusRaw, lifecycle);
+    const status = toStatus(statusRaw, lifecycle, referenceTime);
     const createdAt = toDate(createdAtRaw);
     const delayMinutes = toDelayMinutes(delayRaw);
 
