@@ -13,16 +13,16 @@ type DataTableProps = {
 
 export function DataTable({ columns, rows }: DataTableProps) {
   return (
-    <div className="overflow-hidden rounded-[24px] border border-white/10">
+    <div className="overflow-hidden rounded-[24px] border border-[color:var(--dashboard-border)]">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/10 text-sm">
-          <thead className="bg-white/5">
+        <table className="min-w-full divide-y divide-[color:var(--dashboard-border)] text-sm">
+          <thead className="bg-[color:var(--dashboard-surface-subtle)]">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
                   className={[
-                    "px-4 py-3 text-xs font-medium uppercase tracking-[0.25em] text-slate-400",
+                    "px-4 py-3 text-xs font-medium uppercase tracking-[0.25em] text-[color:var(--dashboard-muted-text)]",
                     column.align === "right" ? "text-right" : "text-left",
                   ].join(" ")}
                 >
@@ -31,14 +31,14 @@ export function DataTable({ columns, rows }: DataTableProps) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10 bg-slate-950/35">
+          <tbody className="divide-y divide-[color:var(--dashboard-border)] bg-[color:var(--dashboard-surface-muted)]">
             {rows.map((row, index) => (
-              <tr key={index} className="hover:bg-white/4">
+              <tr key={index} className="hover:bg-[color:var(--dashboard-surface-subtle)]">
                 {columns.map((column) => (
                   <td
                     key={column.key}
                     className={[
-                      "px-4 py-4 align-top text-slate-200",
+                      "px-4 py-4 align-top text-[color:var(--dashboard-body)]",
                       column.align === "right" ? "text-right" : "text-left",
                     ].join(" ")}
                   >

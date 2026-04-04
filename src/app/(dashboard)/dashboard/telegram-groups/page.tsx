@@ -67,13 +67,6 @@ export default async function TelegramGroupsPage() {
       />
 
       <SectionCard
-        title="Current mappings"
-        description="Operators need a direct view of which delivery type routes to which group before notifications go live."
-      >
-        <DataTable columns={groupColumns} rows={groupRows} />
-      </SectionCard>
-
-      <SectionCard
         title="Add or update mapping"
         description="Select the store and Telegram chat. Delivery types already enabled on the store will be mapped automatically."
       >
@@ -109,6 +102,13 @@ export default async function TelegramGroupsPage() {
             </button>
           </div>
         </form>
+      </SectionCard>
+
+      <SectionCard
+        title="Current mappings"
+        description="Operators need a direct view of which delivery type routes to which group before notifications go live."
+      >
+        <DataTable columns={groupColumns} rows={groupRows} />
       </SectionCard>
     </div>
   );

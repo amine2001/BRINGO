@@ -1,33 +1,62 @@
+import { cookies } from "next/headers";
+
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
+import {
+  LANGUAGE_COOKIE_NAME,
+  resolveAppLanguage,
+} from "@/lib/settings/preferences";
 
 type DashboardShellProps = {
   children: React.ReactNode;
 };
 
-export function DashboardShell({ children }: DashboardShellProps) {
+const HERO_COPY = {
+  en: {
+    eyebrow: "Last Mile",
+    title: "Control Tower",
+    description: "API-driven orchestration for orders, notifications, and admin alerting.",
+  },
+  fr: {
+    eyebrow: "Last Mile",
+    title: "Control Tower",
+    description: "Pilotage des commandes, notifications et alertes admin.",
+  },
+  ar: {
+    eyebrow: "Bringo",
+    title: "Control Tower",
+    description: "متابعة الطلبات والتنبيهات والتنبيه الاداري في الوقت الحقيقي.",
+  },
+  pt: {
+    eyebrow: "Last Mile",
+    title: "Control Tower",
+    description: "Orquestracao de pedidos, notificacoes e alertas administrativos.",
+  },
+} as const;
+
+export async function DashboardShell({ children }: DashboardShellProps) {
+  const cookieStore = await cookies();
+  const language = resolveAppLanguage(cookieStore.get(LANGUAGE_COOKIE_NAME)?.value);
+  const heroCopy = HERO_COPY[language];
+
   return (
-    <div
-      data-dashboard-shell-root="true"
-      className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(251,191,36,0.14),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_40%,_#111827_100%)] text-slate-100"
-    >
+    <div data-dashboard-shell-root="true" className="dashboard-shell min-h-screen">
       <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-6 px-4 py-4 sm:px-6 lg:flex-row lg:px-8">
         <aside className="w-full shrink-0 lg:w-80">
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/60 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
-            <div className="rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/18 via-cyan-400/5 to-transparent p-5">
-              <p className="text-xs uppercase tracking-[0.4em] text-cyan-200/70">
-                Last Mile
+          <div className="dashboard-sidebar-panel overflow-hidden rounded-[28px] p-6">
+            <div className="dashboard-hero-card rounded-3xl p-5">
+              <p className="text-xs uppercase tracking-[0.4em] text-[color:var(--dashboard-eyebrow)]">
+                {heroCopy.eyebrow}
               </p>
-              <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white">
-                Control Tower
+              <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[color:var(--dashboard-heading)]">
+                {heroCopy.title}
               </h1>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                API-driven orchestration for orders, notifications, and admin
-                alerting.
+              <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-body)]">
+                {heroCopy.description}
               </p>
             </div>
 
             <div className="mt-6">
-              <SidebarNav />
+              <SidebarNav language={language} />
             </div>
           </div>
         </aside>

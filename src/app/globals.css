@@ -30,6 +30,34 @@ html[data-theme="light"] {
   --warning: #c5891d;
   --danger: #b43f31;
   --shadow-soft: 0 20px 60px rgba(31, 41, 51, 0.08);
+  --dashboard-shell-bg:
+    radial-gradient(circle at top left, rgba(215, 106, 45, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(31, 122, 79, 0.12), transparent 24%),
+    linear-gradient(180deg, #f6f1e8 0%, #efe6d7 100%);
+  --dashboard-surface: rgba(255, 250, 242, 0.9);
+  --dashboard-surface-muted: rgba(248, 241, 229, 0.92);
+  --dashboard-surface-subtle: rgba(245, 236, 223, 0.82);
+  --dashboard-surface-strong: rgba(235, 225, 210, 0.94);
+  --dashboard-border: rgba(31, 41, 51, 0.12);
+  --dashboard-border-strong: rgba(31, 41, 51, 0.2);
+  --dashboard-heading: #19232f;
+  --dashboard-body: #314252;
+  --dashboard-muted-text: #667587;
+  --dashboard-eyebrow: #b15b22;
+  --dashboard-hero-bg:
+    linear-gradient(135deg, rgba(215, 106, 45, 0.14), rgba(255, 250, 242, 0.28));
+  --dashboard-input-bg: rgba(255, 255, 255, 0.88);
+  --dashboard-input-text: #19232f;
+  --dashboard-input-placeholder: rgba(49, 66, 82, 0.55);
+  --dashboard-nav-active-bg: rgba(215, 106, 45, 0.14);
+  --dashboard-nav-active-border: rgba(215, 106, 45, 0.4);
+  --dashboard-nav-active-ring: rgba(215, 106, 45, 0.18);
+  --dashboard-button-primary-bg: #d76a2d;
+  --dashboard-button-primary-hover: #c45f27;
+  --dashboard-button-primary-text: #fff8f0;
+  --dashboard-button-secondary-bg: rgba(255, 255, 255, 0.72);
+  --dashboard-button-secondary-hover: rgba(255, 255, 255, 0.96);
+  --dashboard-button-secondary-text: #19232f;
 }
 
 html[data-theme="dark"] {
@@ -46,6 +74,34 @@ html[data-theme="dark"] {
   --warning: #e8b34e;
   --danger: #e06b5f;
   --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.32);
+  --dashboard-shell-bg:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(251, 191, 36, 0.14), transparent 24%),
+    linear-gradient(180deg, #020617 0%, #0f172a 40%, #111827 100%);
+  --dashboard-surface: rgba(17, 24, 39, 0.72);
+  --dashboard-surface-muted: rgba(24, 33, 49, 0.92);
+  --dashboard-surface-subtle: rgba(255, 255, 255, 0.05);
+  --dashboard-surface-strong: rgba(2, 6, 23, 0.45);
+  --dashboard-border: rgba(255, 255, 255, 0.1);
+  --dashboard-border-strong: rgba(255, 255, 255, 0.18);
+  --dashboard-heading: #ffffff;
+  --dashboard-body: #d6deea;
+  --dashboard-muted-text: #94a3b8;
+  --dashboard-eyebrow: rgba(165, 243, 252, 0.78);
+  --dashboard-hero-bg:
+    linear-gradient(135deg, rgba(34, 211, 238, 0.18), rgba(255, 255, 255, 0.02));
+  --dashboard-input-bg: rgba(255, 255, 255, 0.06);
+  --dashboard-input-text: #ffffff;
+  --dashboard-input-placeholder: rgba(203, 213, 225, 0.52);
+  --dashboard-nav-active-bg: rgba(34, 211, 238, 0.12);
+  --dashboard-nav-active-border: rgba(34, 211, 238, 0.36);
+  --dashboard-nav-active-ring: rgba(34, 211, 238, 0.16);
+  --dashboard-button-primary-bg: rgba(255, 255, 255, 0.96);
+  --dashboard-button-primary-hover: rgba(226, 232, 240, 0.96);
+  --dashboard-button-primary-text: #0f172a;
+  --dashboard-button-secondary-bg: rgba(255, 255, 255, 0.08);
+  --dashboard-button-secondary-hover: rgba(255, 255, 255, 0.14);
+  --dashboard-button-secondary-text: #ffffff;
 }
 
 @theme inline {
@@ -98,6 +154,68 @@ body {
   background-image:
     radial-gradient(circle at top left, rgba(215, 106, 45, 0.12), transparent 28%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 45%);
+}
+
+.dashboard-shell {
+  background: var(--dashboard-shell-bg);
+  color: var(--dashboard-heading);
+}
+
+.dashboard-sidebar-panel,
+.dashboard-panel {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(24px);
+}
+
+.dashboard-hero-card {
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent 78%);
+  background: var(--dashboard-hero-bg);
+}
+
+.dashboard-soft-card {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface-muted);
+}
+
+.dashboard-subtle-card {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface-subtle);
+}
+
+.dashboard-strong-card {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface-strong);
+}
+
+.dashboard-input {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-input-bg);
+  color: var(--dashboard-input-text);
+}
+
+.dashboard-input::placeholder {
+  color: var(--dashboard-input-placeholder);
+}
+
+.dashboard-button-primary {
+  background: var(--dashboard-button-primary-bg);
+  color: var(--dashboard-button-primary-text);
+}
+
+.dashboard-button-primary:hover {
+  background: var(--dashboard-button-primary-hover);
+}
+
+.dashboard-button-secondary {
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-button-secondary-bg);
+  color: var(--dashboard-button-secondary-text);
+}
+
+.dashboard-button-secondary:hover {
+  background: var(--dashboard-button-secondary-hover);
 }
 
 body [data-dashboard-shell-root="true"] {

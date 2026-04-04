@@ -26,7 +26,7 @@ export default async function WorkflowPage() {
       step: "02",
       title: "Waiting acceptance",
       description:
-        "If the order is still not accepted after the grace period, reminders keep going until preparation is accepted.",
+        "If the order is still not accepted after the grace period, reminders keep going until preparation starts.",
       accent: "warn" as const,
       details: [
         `Grace period: ${workflow.acceptanceGraceMinutes} min`,
@@ -63,33 +63,42 @@ export default async function WorkflowPage() {
         eyebrow="Workflow"
         title="Shape and configure the live notification workflow"
         description="This is the real Bringo order workflow: received, not accepted, preparation delay, and delivery alert. The timing values below drive the live poller."
+        actions={
+          <StatusPill tone={data.isCustom ? "good" : "info"}>
+            {data.isCustom ? "Custom workflow active" : "Default workflow active"}
+          </StatusPill>
+        }
       />
 
       <SectionCard
         title="Workflow map"
-        description="Each stage shows exactly when notifications start, what condition keeps them active, and what clears the alert."
+        description="Each stage shows when notifications start, what condition keeps them active, and what clears the alert."
       >
         <div className="grid gap-4 xl:grid-cols-4">
           {steps.map((item) => (
             <div
               key={item.step}
-              className="relative overflow-hidden rounded-[26px] border border-white/10 bg-white/4 p-5"
+              className="dashboard-soft-card relative overflow-hidden rounded-[26px] p-5"
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
               <div className="relative">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold tracking-[0.35em] text-slate-400">
+                  <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
                     STEP {item.step}
                   </span>
                   <StatusPill tone={item.accent}>{item.title}</StatusPill>
                 </div>
-                <p className="mt-4 text-lg font-semibold text-white">{item.title}</p>
-                <p className="mt-3 text-sm leading-6 text-slate-300">{item.description}</p>
+                <p className="mt-4 text-lg font-semibold text-[color:var(--dashboard-heading)]">
+                  {item.title}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-body)]">
+                  {item.description}
+                </p>
                 <div className="mt-5 space-y-2">
                   {item.details.map((detail) => (
                     <div
                       key={detail}
-                      className="rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-3 text-sm text-slate-200"
+                      className="dashboard-strong-card rounded-2xl px-4 py-3 text-sm text-[color:var(--dashboard-body)]"
                     >
                       {detail}
                     </div>
@@ -103,38 +112,42 @@ export default async function WorkflowPage() {
 
       <SectionCard
         title="Current timing profile"
-        description="Defaults match your original setup. Once you save changes here, the cron uses these minutes for all future reminders."
+        description="These minutes are read by the live poller and decide when each reminder round starts."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5">
-            <p className="text-sm text-slate-400">Profile source</p>
+          <div className="dashboard-soft-card rounded-[24px] p-5">
+            <p className="text-sm text-[color:var(--dashboard-muted-text)]">Profile source</p>
             <div className="mt-3">
               <StatusPill tone={data.isCustom ? "good" : "neutral"}>
                 {data.isCustom ? "Custom workflow" : "Default workflow"}
               </StatusPill>
             </div>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5">
-            <p className="text-sm text-slate-400">Acceptance grace</p>
-            <p className="mt-3 text-lg font-semibold text-white">
+          <div className="dashboard-soft-card rounded-[24px] p-5">
+            <p className="text-sm text-[color:var(--dashboard-muted-text)]">Acceptance grace</p>
+            <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
               {workflow.acceptanceGraceMinutes} min
             </p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5">
-            <p className="text-sm text-slate-400">Acceptance reminder</p>
-            <p className="mt-3 text-lg font-semibold text-white">
+          <div className="dashboard-soft-card rounded-[24px] p-5">
+            <p className="text-sm text-[color:var(--dashboard-muted-text)]">Acceptance reminder</p>
+            <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
               {workflow.acceptanceReminderIntervalMinutes} min
             </p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5">
-            <p className="text-sm text-slate-400">Prep minutes per product</p>
-            <p className="mt-3 text-lg font-semibold text-white">
+          <div className="dashboard-soft-card rounded-[24px] p-5">
+            <p className="text-sm text-[color:var(--dashboard-muted-text)]">
+              Prep minutes per product
+            </p>
+            <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
               {workflow.preparationMinutesPerProduct} min
             </p>
           </div>
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5">
-            <p className="text-sm text-slate-400">Delivery alert reminder</p>
-            <p className="mt-3 text-lg font-semibold text-white">
+          <div className="dashboard-soft-card rounded-[24px] p-5">
+            <p className="text-sm text-[color:var(--dashboard-muted-text)]">
+              Delivery alert reminder
+            </p>
+            <p className="mt-3 text-lg font-semibold text-[color:var(--dashboard-heading)]">
               {workflow.deliveryAlertReminderIntervalMinutes} min
             </p>
           </div>
@@ -146,34 +159,34 @@ export default async function WorkflowPage() {
         description="Change the minutes here to tune the reminder cadence without changing code."
       >
         <form action={saveWorkflowSettingsAction} className="grid gap-4 lg:grid-cols-2">
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">
-              Minutes before “not accepted” reminders start
+          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+            <span className="block font-medium text-[color:var(--dashboard-heading)]">
+              Minutes before not accepted reminders start
             </span>
             <input
               name="acceptanceGraceMinutes"
               type="number"
               min="1"
               defaultValue={workflow.acceptanceGraceMinutes}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
             />
           </label>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">
-              Minutes between “not accepted” reminders
+          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+            <span className="block font-medium text-[color:var(--dashboard-heading)]">
+              Minutes between not accepted reminders
             </span>
             <input
               name="acceptanceReminderIntervalMinutes"
               type="number"
               min="1"
               defaultValue={workflow.acceptanceReminderIntervalMinutes}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
             />
           </label>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">
+          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+            <span className="block font-medium text-[color:var(--dashboard-heading)]">
               Preparation minutes per product
             </span>
             <input
@@ -181,12 +194,12 @@ export default async function WorkflowPage() {
               type="number"
               min="1"
               defaultValue={workflow.preparationMinutesPerProduct}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
             />
           </label>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            <span className="block font-medium text-white">
+          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+            <span className="block font-medium text-[color:var(--dashboard-heading)]">
               Minutes between preparation delay reminders
             </span>
             <input
@@ -194,12 +207,12 @@ export default async function WorkflowPage() {
               type="number"
               min="1"
               defaultValue={workflow.preparationReminderIntervalMinutes}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
             />
           </label>
 
-          <label className="space-y-2 text-sm text-slate-300 lg:col-span-2">
-            <span className="block font-medium text-white">
+          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)] lg:col-span-2">
+            <span className="block font-medium text-[color:var(--dashboard-heading)]">
               Minutes between delivery alert reminders
             </span>
             <input
@@ -207,23 +220,25 @@ export default async function WorkflowPage() {
               type="number"
               min="1"
               defaultValue={workflow.deliveryAlertReminderIntervalMinutes}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
+              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
             />
           </label>
 
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5 lg:col-span-2">
-            <p className="text-sm font-medium text-white">Current preparation formula</p>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
+          <div className="dashboard-soft-card rounded-[24px] p-5 lg:col-span-2">
+            <p className="text-sm font-medium text-[color:var(--dashboard-heading)]">
+              Current preparation formula
+            </p>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-body)]">
               Allowed preparation time = product count x {workflow.preparationMinutesPerProduct} minutes.
-              Example: 5 products = {workflow.preparationMinutesPerProduct * 5} minutes before the
-              preparation delay reminders begin.
+              Example: 5 products = {workflow.preparationMinutesPerProduct * 5} minutes before
+              the preparation delay reminders begin.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3 lg:col-span-2">
             <button
               type="submit"
-              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
+              className="dashboard-button-primary rounded-full px-5 py-3 text-sm font-semibold"
             >
               Save workflow
             </button>

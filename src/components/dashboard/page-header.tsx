@@ -12,16 +12,19 @@ export function PageHeader({
   actions,
 }: PageHeaderProps) {
   return (
-    <div className="rounded-[28px] border border-white/10 bg-white/6 p-6 shadow-xl shadow-slate-950/20 backdrop-blur-xl">
+    <div
+      data-dashboard-card="header"
+      className="dashboard-panel rounded-[28px] p-6"
+    >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
-          <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">
+          <p className="text-xs uppercase tracking-[0.35em] text-[color:var(--dashboard-eyebrow)]">
             {eyebrow}
           </p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[color:var(--dashboard-heading)]">
             {title}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--dashboard-body)]">
             {description}
           </p>
         </div>

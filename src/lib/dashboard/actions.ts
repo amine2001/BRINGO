@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 
 import {
@@ -105,6 +106,7 @@ export async function saveDashboardSettingsAction(formData: FormData) {
   });
 
   revalidateDashboard();
+  redirect("/dashboard/settings");
 }
 
 export async function runManualPollAction() {
@@ -535,6 +537,7 @@ export async function saveWorkflowSettingsAction(formData: FormData) {
     deliveryAlertReminderIntervalMinutes,
   });
   revalidateDashboard();
+  redirect("/dashboard/workflow");
 }
 
 export async function saveDelaySettingsAction(formData: FormData) {

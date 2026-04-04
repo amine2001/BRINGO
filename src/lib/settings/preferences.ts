@@ -3,9 +3,9 @@ export const THEME_COOKIE_NAME = "bringo-theme";
 
 export const LANGUAGE_OPTIONS = [
   { value: "en", label: "English", description: "Default dashboard language", direction: "ltr" },
-  { value: "fr", label: "French", description: "Français", direction: "ltr" },
-  { value: "ar", label: "Arabic", description: "العربية", direction: "rtl" },
-  { value: "pt", label: "Portuguese", description: "Português", direction: "ltr" },
+  { value: "fr", label: "French", description: "Francais", direction: "ltr" },
+  { value: "ar", label: "Arabic", description: "RTL dashboard language", direction: "rtl" },
+  { value: "pt", label: "Portuguese", description: "Portugues", direction: "ltr" },
 ] as const;
 
 export const THEME_OPTIONS = [
