@@ -1,4 +1,5 @@
 export type DeliveryType = 'EXPRESS' | 'MARKET' | 'HYPER'
+export type WorkflowReminderStage = 'waiting_acceptance' | 'preparation_overdue' | 'delivery_alert'
 
 export type OrderStatus = 'new' | 'accepted' | 'prepared' | 'delivered' | string
 
@@ -23,6 +24,14 @@ export interface ReminderMessageInput extends TelegramMessageBase {
   status: OrderStatus
   reminderCount?: number
   nextReminderInMinutes?: number
+}
+
+export interface WorkflowReminderMessageInput extends TelegramMessageBase {
+  stage: WorkflowReminderStage
+  reminderCount?: number
+  overdueMinutes?: number | null
+  productCount?: number | null
+  expectedPreparationMinutes?: number | null
 }
 
 export interface DelayAlertMessageInput extends TelegramMessageBase {
@@ -78,4 +87,3 @@ export interface TelegramClientConfig {
   retryAttempts: number
   retryDelayMs: number
 }
-

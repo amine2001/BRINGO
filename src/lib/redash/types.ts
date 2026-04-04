@@ -2,6 +2,17 @@ import type { DeliveryType, OrderStatus } from "@/lib/db";
 
 export type RedashResponseFormat = "auto" | "json" | "csv";
 
+export interface OrderLifecycleMetadata {
+  accepted_at: Date | null;
+  preparation_ended_at: Date | null;
+  product_count: number | null;
+  final_product_count: number | null;
+  delivery_state: string | null;
+  picker_state: string | null;
+  delivery_alert_active: boolean;
+  expected_preparation_minutes: number | null;
+}
+
 export interface RedashClientConfig {
   apiUrl: string;
   apiKey: string;
@@ -16,6 +27,7 @@ export interface NormalizedOrderRecord {
   status: OrderStatus;
   created_at: Date;
   delay_minutes: number | null;
+  lifecycle: OrderLifecycleMetadata;
   raw: Record<string, unknown>;
 }
 

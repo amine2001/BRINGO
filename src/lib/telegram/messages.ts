@@ -2,7 +2,8 @@ import type {
   DelayAlertMessageInput,
   NewOrderMessageInput,
   ReminderMessageInput,
-  StatusChangeMessageInput
+  StatusChangeMessageInput,
+  WorkflowReminderMessageInput,
 } from './types'
 
 function normalizeText(value: string | number | undefined | null) {
@@ -37,6 +38,10 @@ export function formatNewOrderMessage(input: NewOrderMessageInput) {
       statusLine: `Status: ${normalizeText(input.status).toUpperCase()}`
     })
   )
+}
+
+function formatOptionalCount(label: string, value: number | null | undefined) {
+  return Number.isFinite(value) ? `${label}: ${value}` : null
 }
 
 export function formatStatusChangeMessage(input: StatusChangeMessageInput) {
@@ -74,6 +79,44 @@ export function formatRepeatedReminderMessage(input: ReminderMessageInput) {
     .join('\n')
 }
 
+export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInput) {
+  const reminderCount = Number.isFinite(input.reminderCount) ? input.reminderCount : 1
+  const productCount = formatOptionalCount('Products', input.productCount)
+  const overdueMinutes = formatOptionalCount('Overdue', input.overdueMinutes)
+  const expectedPreparationMinutes = formatOptionalCount(
+    'Expected Prep Time',
+    input.expectedPreparationMinutes
+  )
+
+  const title =
+    input.stage === 'waiting_acceptance'
+      ? 'ORDER NOT ACCEPTED'
+      : input.stage === 'preparation_overdue'
+        ? 'PREPARATION DELAY'
+        : 'DELIVERY ALERT'
+
+  return [
+    formatHeader(title).trimEnd(),
+    formatOrderContext({
+      storeName: input.storeName,
+      deliveryType: input.deliveryType,
+      orderId: input.orderId,
+      statusLine:
+        input.stage === 'waiting_acceptance'
+          ? 'Status: WAITING ACCEPTANCE'
+          : input.stage === 'preparation_overdue'
+            ? 'Status: PREPARATION OVERDUE'
+            : 'Status: DELIVERY ALERT'
+    }),
+    productCount,
+    expectedPreparationMinutes,
+    overdueMinutes,
+    `Reminder Count: ${reminderCount}`
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
 export function formatDelayAlertMessage(input: DelayAlertMessageInput) {
   return [
     formatHeader('DELAY ALERT').trimEnd(),
@@ -86,4 +129,3 @@ export function formatDelayAlertMessage(input: DelayAlertMessageInput) {
     `Threshold: ${Math.max(0, input.thresholdMinutes)} min`
   ].join('\n')
 }
-

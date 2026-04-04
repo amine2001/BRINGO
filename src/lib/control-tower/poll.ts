@@ -12,7 +12,6 @@ import {
   delaySettings,
   deliveryTypeMapping,
   getDb,
-  notificationSettings,
   ordersCache,
   storeGroupMapping,
   telegramGroups,
@@ -23,13 +22,12 @@ import {
   evaluateDelayAlert,
 } from "@/lib/delay";
 import { writeErrorLog, writeInfoLog, writeWarnLog } from "@/lib/logs/service";
-import { evaluateOrderNotifications } from "@/lib/notifications";
+import { evaluateNotificationWorkflow } from "@/lib/notifications";
 import { processOrders } from "@/lib/orders";
-import { createRedashClient } from "@/lib/redash";
+import { createRedashClient, extractOrderLifecycleMetadata } from "@/lib/redash";
 import {
   formatNewOrderMessage,
-  formatRepeatedReminderMessage,
-  formatStatusChangeMessage,
+  formatWorkflowReminderMessage,
   sendTelegramText,
   sendTelegramTextToMany,
 } from "@/lib/telegram";
@@ -60,7 +58,6 @@ type CompanyBundle = {
   apiConfig: typeof apiConfig.$inferSelect;
   delaySettings: typeof delaySettings.$inferSelect | null;
   deliveryTypeMappings: Array<typeof deliveryTypeMapping.$inferSelect>;
-  notificationSettings: Array<typeof notificationSettings.$inferSelect>;
   groupMappings: Array<
     typeof storeGroupMapping.$inferSelect & {
       chatId: string;
@@ -69,49 +66,6 @@ type CompanyBundle = {
     }
   >;
 };
-
-function buildOrderSnapshot(row: OrderCacheRow) {
-  return {
-    orderId: row.orderId,
-    storeName: row.storeName,
-    deliveryType: row.deliveryType,
-    status: row.status,
-    createdAt: row.createdAt,
-    delayMinutes: row.delayMinutes,
-  };
-}
-
-function resolveNotificationPolicy(
-  settingsRows: CompanyBundle["notificationSettings"],
-  row: OrderCacheRow,
-) {
-  const matches = settingsRows.filter(
-    (settings) =>
-      settings.isActive &&
-      (settings.storeId === row.storeId || settings.storeId === null) &&
-      (settings.deliveryType === row.deliveryType || settings.deliveryType === null),
-  );
-
-  matches.sort((left, right) => {
-    const leftScore =
-      (left.storeId ? 2 : 0) + (left.deliveryType ? 1 : 0);
-    const rightScore =
-      (right.storeId ? 2 : 0) + (right.deliveryType ? 1 : 0);
-
-    return rightScore - leftScore;
-  });
-
-  const selected = matches[0];
-
-  return {
-    repeatCount: selected?.repeatCount ?? 3,
-    intervalSeconds: selected?.intervalSeconds ?? 300,
-    stopWhenAccepted: selected?.stopOnAccepted ?? true,
-    stopWhenDelivered: selected?.stopOnDelivered ?? true,
-    sendInitialAlert: true,
-    sendStatusChangeAlerts: true,
-  };
-}
 
 function isDeliveryTypeEnabled(
   mappings: CompanyBundle["deliveryTypeMappings"],
@@ -198,62 +152,44 @@ async function dispatchOrderNotifications(
   }
 
   const now = new Date();
-  const evaluation = evaluateOrderNotifications(buildOrderSnapshot(row), {
+  const lifecycle = extractOrderLifecycleMetadata(
+    row.sourcePayload && typeof row.sourcePayload === "object"
+      ? (row.sourcePayload as Record<string, unknown>)
+      : {},
+  );
+  const workflow = evaluateNotificationWorkflow(lifecycle, {
+    createdAt: row.createdAt,
+    status: row.status,
     now,
-    previousSnapshot: previousStatus ? { status: previousStatus } : null,
-    policy: resolveNotificationPolicy(bundle.notificationSettings, row),
-    state: {
-      initialSentAt: row.initialNotificationSentAt?.getTime() ?? null,
-      lastReminderSentAt: row.lastReminderSentAt?.getTime() ?? null,
-      remindersSent: row.remindersSent,
-      lastNotifiedStatus: row.lastNotifiedStatus,
-    },
+    initialSentAt: row.initialNotificationSentAt?.getTime() ?? null,
+    lastReminderSentAt: row.lastReminderSentAt?.getTime() ?? null,
+    remindersSent: row.remindersSent,
+    previousStatus,
   });
 
   const pendingUpdates: Partial<typeof ordersCache.$inferInsert> = {
-    nextReminderAt: evaluation.nextNotificationAt
-      ? new Date(evaluation.nextNotificationAt)
+    nextReminderAt: workflow.nextReminderAt
+      ? new Date(workflow.nextReminderAt)
       : null,
   };
 
   let dispatchedMessages = 0;
   let dispatchedNotificationRounds = 0;
-  let remindersDispatched = 0;
 
-  for (const draft of evaluation.notificationsToSend) {
-    const text =
-      draft.kind === "initial"
-        ? formatNewOrderMessage({
-            storeName: row.storeName,
-            deliveryType: row.deliveryType,
-            orderId: row.orderId,
-            status: row.status,
-          })
-        : draft.kind === "status-change"
-          ? formatStatusChangeMessage({
-              storeName: row.storeName,
-              deliveryType: row.deliveryType,
-              orderId: row.orderId,
-              previousStatus: previousStatus ?? row.lastNotifiedStatus ?? row.status,
-              nextStatus: row.status,
-            })
-          : formatRepeatedReminderMessage({
-              storeName: row.storeName,
-              deliveryType: row.deliveryType,
-              orderId: row.orderId,
-              status: row.status,
-              reminderCount: draft.sequence,
-              nextReminderInMinutes: evaluation.nextNotificationAt
-                ? Math.max(
-                    1,
-                    Math.ceil((evaluation.nextNotificationAt - now.getTime()) / 60_000),
-                  )
-                : undefined,
-            });
+  if (workflow.resetReminderState) {
+    pendingUpdates.lastReminderSentAt = null;
+    pendingUpdates.remindersSent = 0;
+  }
 
+  if (workflow.shouldSendInitial) {
     const result = await sendTelegramTextToMany({
       chatIds,
-      text,
+      text: formatNewOrderMessage({
+        storeName: row.storeName,
+        deliveryType: row.deliveryType,
+        orderId: row.orderId,
+        status: row.status,
+      }),
     });
 
     if (!result.ok) {
@@ -263,33 +199,55 @@ async function dispatchOrderNotifications(
         `Telegram dispatch failed for order ${row.orderId}.`,
         {
           orderId: row.orderId,
-          draftKind: draft.kind,
+          notificationType: "initial",
           failed: result.failed,
         },
       );
-      continue;
-    }
-
-    dispatchedMessages += result.sent.length;
-    dispatchedNotificationRounds += 1;
-    pendingUpdates.lastNotifiedAt = now;
-    pendingUpdates.notificationCount =
-      row.notificationCount + dispatchedNotificationRounds;
-    pendingUpdates.lastNotifiedStatus = row.status;
-
-    if (draft.kind === "initial" && !row.initialNotificationSentAt) {
+    } else {
+      dispatchedMessages += result.sent.length;
+      dispatchedNotificationRounds += 1;
       pendingUpdates.initialNotificationSentAt = now;
-    }
-
-    if (draft.kind === "reminder") {
-      remindersDispatched += 1;
-      pendingUpdates.lastReminderSentAt = now;
-      pendingUpdates.remindersSent = row.remindersSent + remindersDispatched;
+      pendingUpdates.lastNotifiedAt = now;
+      pendingUpdates.lastNotifiedStatus = row.status;
+      pendingUpdates.notificationCount = row.notificationCount + dispatchedNotificationRounds;
     }
   }
 
-  if (evaluation.stopReason) {
-    pendingUpdates.nextReminderAt = null;
+  if (workflow.shouldSendReminder && workflow.stage) {
+    const result = await sendTelegramTextToMany({
+      chatIds,
+      text: formatWorkflowReminderMessage({
+        storeName: row.storeName,
+        deliveryType: row.deliveryType,
+        orderId: row.orderId,
+        stage: workflow.stage,
+        reminderCount: workflow.reminderCount,
+        overdueMinutes: workflow.overdueMinutes,
+        productCount: workflow.productCount,
+        expectedPreparationMinutes: workflow.expectedPreparationMinutes,
+      }),
+    });
+
+    if (!result.ok) {
+      await writeErrorLog(
+        bundle.companyId,
+        "notification",
+        `Telegram dispatch failed for order ${row.orderId}.`,
+        {
+          orderId: row.orderId,
+          notificationType: workflow.stage,
+          failed: result.failed,
+        },
+      );
+    } else {
+      dispatchedMessages += result.sent.length;
+      dispatchedNotificationRounds += 1;
+      pendingUpdates.lastReminderSentAt = now;
+      pendingUpdates.remindersSent = workflow.reminderCount;
+      pendingUpdates.lastNotifiedAt = now;
+      pendingUpdates.lastNotifiedStatus = row.status;
+      pendingUpdates.notificationCount = row.notificationCount + dispatchedNotificationRounds;
+    }
   }
 
   await updateOrderCacheState(row.id, pendingUpdates);
@@ -413,15 +371,11 @@ async function loadCompanyBundle(
     .where(and(eq(delaySettings.companyId, companyId), eq(delaySettings.isActive, true)))
     .limit(1);
 
-  const [deliveryTypeRows, notificationSettingRows, mappingRows] = await Promise.all([
+  const [deliveryTypeRows, mappingRows] = await Promise.all([
     db
       .select()
       .from(deliveryTypeMapping)
       .where(eq(deliveryTypeMapping.companyId, companyId)),
-    db
-      .select()
-      .from(notificationSettings)
-      .where(eq(notificationSettings.companyId, companyId)),
     db
       .select({
         id: storeGroupMapping.id,
@@ -450,7 +404,6 @@ async function loadCompanyBundle(
     apiConfig: apiConfigRow,
     delaySettings: delaySettingsRow ?? null,
     deliveryTypeMappings: deliveryTypeRows,
-    notificationSettings: notificationSettingRows,
     groupMappings: mappingRows,
   };
 }

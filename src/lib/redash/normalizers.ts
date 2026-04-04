@@ -1,6 +1,6 @@
 import type { DeliveryType, OrderStatus } from "@/lib/db";
 
-import type { NormalizedOrderRecord } from "./types";
+import type { NormalizedOrderRecord, OrderLifecycleMetadata } from "./types";
 
 type LooseRecord = Record<string, unknown>;
 
@@ -17,6 +17,25 @@ const CREATED_AT_KEYS = [
   "checkout_completed_at",
 ];
 const DELAY_KEYS = ["delay_minutes", "delay", "retard", "delay_min", "delayMinutes"];
+const ACCEPTED_AT_KEYS = [
+  "accepted_at",
+  "date_d_acceptation_prep",
+  "date_acceptation_prep",
+  "accepted_preparation_at",
+];
+const PREPARATION_ENDED_AT_KEYS = [
+  "order_preparation_end",
+  "preparation_end",
+  "prepared_at",
+];
+const PRODUCT_COUNT_KEYS = ["number_of_products", "product_count", "products_count"];
+const FINAL_PRODUCT_COUNT_KEYS = [
+  "number_of_final_products",
+  "final_product_count",
+  "final_products_count",
+];
+const DELIVERY_STATE_KEYS = ["etat_shopper", "delivery_state", "shopper_state"];
+const PICKER_STATE_KEYS = ["etat_picker", "picker_state"];
 
 function normalizeKey(value: string): string {
   return value
@@ -54,6 +73,11 @@ function normalizeText(value: unknown): string {
     .toLowerCase();
 }
 
+function normalizeState(value: unknown): string | null {
+  const normalized = normalizeText(value);
+  return normalized || null;
+}
+
 function toDeliveryType(raw: unknown, storeName: unknown): DeliveryType | null {
   const value = normalizeText(raw);
   const normalizedStoreName = normalizeText(storeName);
@@ -71,17 +95,18 @@ function toDeliveryType(raw: unknown, storeName: unknown): DeliveryType | null {
   return null;
 }
 
-function toStatus(raw: unknown): OrderStatus | null {
-  const value = normalizeText(raw);
-  if (["new", "pending", "created"].includes(value)) return "new";
-  if (["accepted", "confirmed", "assigned"].includes(value)) return "accepted";
-  if (["prepared", "preparing", "ready"].includes(value)) return "prepared";
-  // The current database enum does not have a dedicated cancelled status yet,
-  // so terminal Redash states collapse into delivered to stop reminders safely.
-  if (["delivered", "completed", "done", "fulfilled", "cancelled", "canceled"].includes(value)) {
-    return "delivered";
-  }
-  return null;
+function isDeliveredLike(value: string | null) {
+  return Boolean(
+    value &&
+      ["delivered", "completed", "done", "fulfilled", "cancelled", "canceled"].includes(value),
+  );
+}
+
+function toPositiveInt(raw: unknown): number | null {
+  if (raw === undefined || raw === null || raw === "") return null;
+  const value = Number(String(raw).replace(",", "."));
+  if (!Number.isFinite(value) || value < 0) return null;
+  return Math.floor(value);
 }
 
 function parseSlashDate(raw: string): Date | null {
@@ -142,6 +167,74 @@ function toDelayMinutes(raw: unknown): number | null {
   return Math.floor(value);
 }
 
+export function extractOrderLifecycleMetadata(record: LooseRecord): OrderLifecycleMetadata {
+  const rec = normalizeRecordKeys(record);
+  const acceptedAt = toDate(pickValue(rec, ACCEPTED_AT_KEYS));
+  const preparationEndedAt = toDate(pickValue(rec, PREPARATION_ENDED_AT_KEYS));
+  const productCount = toPositiveInt(pickValue(rec, PRODUCT_COUNT_KEYS));
+  const finalProductCount = toPositiveInt(pickValue(rec, FINAL_PRODUCT_COUNT_KEYS));
+  const deliveryState = normalizeState(pickValue(rec, DELIVERY_STATE_KEYS));
+  const pickerState = normalizeState(pickValue(rec, PICKER_STATE_KEYS));
+  const expectedProductCount = productCount ?? finalProductCount;
+
+  return {
+    accepted_at: acceptedAt,
+    preparation_ended_at: preparationEndedAt,
+    product_count: productCount,
+    final_product_count: finalProductCount,
+    delivery_state: deliveryState,
+    picker_state: pickerState,
+    delivery_alert_active:
+      deliveryState === "alert" || pickerState === "alert",
+    expected_preparation_minutes: expectedProductCount
+      ? Math.max(1, expectedProductCount) * 2
+      : null,
+  };
+}
+
+function toStatus(raw: unknown, lifecycle: OrderLifecycleMetadata): OrderStatus | null {
+  const value = normalizeText(raw);
+
+  if (
+    isDeliveredLike(value) ||
+    lifecycle.delivery_state === "complete" ||
+    lifecycle.delivery_state === "completed" ||
+    lifecycle.delivery_state === "canceled" ||
+    lifecycle.delivery_state === "cancelled" ||
+    lifecycle.picker_state === "complete" ||
+    lifecycle.picker_state === "completed" ||
+    lifecycle.picker_state === "canceled" ||
+    lifecycle.picker_state === "cancelled"
+  ) {
+    return "delivered";
+  }
+
+  if (
+    ["prepared", "preparing", "ready"].includes(value) ||
+    lifecycle.preparation_ended_at
+  ) {
+    return "prepared";
+  }
+
+  if (
+    ["accepted", "confirmed", "assigned"].includes(value) ||
+    lifecycle.accepted_at
+  ) {
+    return "accepted";
+  }
+
+  if (
+    ["new", "pending", "created", "received"].includes(value) ||
+    lifecycle.delivery_state === "received" ||
+    lifecycle.picker_state === "received" ||
+    value === ""
+  ) {
+    return "new";
+  }
+
+  return null;
+}
+
 export interface NormalizationResult {
   normalized: NormalizedOrderRecord[];
   warnings: string[];
@@ -153,6 +246,7 @@ export function normalizeRedashRecords(input: LooseRecord[]): NormalizationResul
 
   input.forEach((record, index) => {
     const rec = normalizeRecordKeys(record);
+    const lifecycle = extractOrderLifecycleMetadata(record);
 
     const orderIdRaw = pickValue(rec, ORDER_ID_KEYS);
     const storeNameRaw = pickValue(rec, STORE_KEYS);
@@ -164,7 +258,7 @@ export function normalizeRedashRecords(input: LooseRecord[]): NormalizationResul
     const orderId = orderIdRaw ? String(orderIdRaw).trim() : "";
     const storeName = storeNameRaw ? String(storeNameRaw).trim() : "";
     const deliveryType = toDeliveryType(deliveryTypeRaw, storeNameRaw);
-    const status = toStatus(statusRaw);
+    const status = toStatus(statusRaw, lifecycle);
     const createdAt = toDate(createdAtRaw);
     const delayMinutes = toDelayMinutes(delayRaw);
 
@@ -196,6 +290,7 @@ export function normalizeRedashRecords(input: LooseRecord[]): NormalizationResul
       status,
       created_at: createdAt,
       delay_minutes: delayMinutes,
+      lifecycle,
       raw: record,
     });
   });
