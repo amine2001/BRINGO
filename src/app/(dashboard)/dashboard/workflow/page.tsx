@@ -15,8 +15,7 @@ export default async function WorkflowPage() {
       step: "01",
       title: "Order received",
       description:
-        "When a new order appears in Redash, the first Telegram alert is sent immediately.",
-      accent: "info" as const,
+        "When a new order appears the Telegram alert is sent immediately.",
       details: [
         "Trigger: new order detected",
         "Action: send first alert instantly",
@@ -26,8 +25,7 @@ export default async function WorkflowPage() {
       step: "02",
       title: "Waiting acceptance",
       description:
-        "If acceptance is still missing after the grace period, reminders repeat until prep starts.",
-      accent: "warn" as const,
+        "If acceptance is still missing reminders repeat until prep starts.",
       details: [
         `Grace period: ${workflow.acceptanceGraceMinutes} min`,
         `Repeat every: ${workflow.acceptanceReminderIntervalMinutes} min`,
@@ -37,8 +35,7 @@ export default async function WorkflowPage() {
       step: "03",
       title: "Preparation SLA",
       description:
-        "After acceptance, the preparation SLA is based on product count and minutes per product.",
-      accent: "good" as const,
+        "The preparation SLA is based on product count and minutes per product.",
       details: [
         `Formula: products x ${workflow.preparationMinutesPerProduct} min`,
         `Late reminder every: ${workflow.preparationReminderIntervalMinutes} min`,
@@ -48,8 +45,7 @@ export default async function WorkflowPage() {
       step: "04",
       title: "Delivery alert",
       description:
-        "After preparation ends, any delivery alert repeats until the order is marked complete.",
-      accent: "danger" as const,
+        "After preparation ends alert repeats until the order is marked complete.",
       details: [
         "Trigger: shopper or picker state = alert",
         `Repeat every: ${workflow.deliveryAlertReminderIntervalMinutes} min`,
@@ -82,16 +78,18 @@ export default async function WorkflowPage() {
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.14),transparent_52%)]" />
               <div className="relative flex h-full flex-col">
-                <div className="flex items-center justify-between gap-3">
+                <div>
                   <span className="text-xs font-semibold tracking-[0.35em] text-[color:var(--dashboard-muted-text)]">
                     STEP {item.step}
                   </span>
-                  <StatusPill tone={item.accent}>{item.title}</StatusPill>
                 </div>
-                <p className="mt-4 text-lg font-semibold text-[color:var(--dashboard-heading)]">
+                <div className="mt-4">
+                  <StatusPill tone="info">{item.title}</StatusPill>
+                </div>
+                <p className="mt-4 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.title}
                 </p>
-                <p className="mt-3 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
+                <p className="mt-0 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
                 </p>
                 <div className="mt-5 grid flex-1 grid-rows-2 gap-2">
