@@ -41,10 +41,6 @@ export function formatNewOrderMessage(input: NewOrderMessageInput) {
   ].join('\n')
 }
 
-function formatOptionalCount(label: string, value: number | null | undefined) {
-  return Number.isFinite(value) ? `${label}: ${value}` : null
-}
-
 export function formatStatusChangeMessage(input: StatusChangeMessageInput) {
   return (
     formatHeader('STATUS UPDATE') +
@@ -98,30 +94,12 @@ export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInpu
     ].join('\n')
   }
 
-  const reminderCount = Number.isFinite(input.reminderCount) ? input.reminderCount : 1
-  const productCount = formatOptionalCount('Products', input.productCount)
-  const overdueMinutes = formatOptionalCount('Overdue', input.overdueMinutes)
-  const expectedPreparationMinutes = formatOptionalCount(
-    'Expected Prep Time',
-    input.expectedPreparationMinutes
-  )
-
-  const title = 'DELIVERY ALERT'
-
   return [
-    formatHeader(title).trimEnd(),
-    formatOrderContext({
-      storeName: input.storeName,
-      deliveryType: input.deliveryType,
-      orderId: input.orderId,
-      statusLine: 'Status: DELIVERY ALERT'
-    }),
-    productCount,
-    expectedPreparationMinutes,
-    overdueMinutes,
-    `Reminder Count: ${reminderCount}`
+    '🚚 RETARD LIVRAISON',
+    `🏪 Magasin: ${normalizeText(input.storeName)}`,
+    `🆔 Commande: ${normalizeText(input.orderId)}`,
+    `⏰ Retard: +${Math.max(0, Number(input.overdueMinutes ?? 0))} min`
   ]
-    .filter(Boolean)
     .join('\n')
 }
 
