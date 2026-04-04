@@ -101,9 +101,7 @@ export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInpu
   const title =
     input.stage === 'waiting_acceptance'
       ? 'ORDER NOT ACCEPTED'
-      : input.stage === 'preparation_overdue'
-        ? 'PREPARATION DELAY'
-        : 'DELIVERY ALERT'
+      : 'DELIVERY ALERT'
 
   return [
     formatHeader(title).trimEnd(),
@@ -114,9 +112,7 @@ export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInpu
       statusLine:
         input.stage === 'waiting_acceptance'
           ? 'Status: WAITING ACCEPTANCE'
-          : input.stage === 'preparation_overdue'
-            ? 'Status: PREPARATION OVERDUE'
-            : 'Status: DELIVERY ALERT'
+          : 'Status: DELIVERY ALERT'
     }),
     productCount,
     expectedPreparationMinutes,
