@@ -5,6 +5,7 @@ import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { ConfirmSubmitButton } from "@/components/dashboard/confirm-submit-button";
 import { getDashboardNavItems } from "@/components/dashboard/navigation";
 
 function isActive(pathname: string, href: string) {
@@ -53,9 +54,12 @@ export function SidebarNav({ canManageCompanies }: SidebarNavProps) {
       })}
 
       <form action="/logout" method="post" className="pt-2">
-        <button
-          type="submit"
+        <ConfirmSubmitButton
+          title="Logout?"
+          description="You will be signed out of the current workspace session."
+          confirmLabel="Logout"
           className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-slate-300 transition hover:border-white/20 hover:bg-white/8 hover:text-white"
+          confirmClassName="rounded-full border border-cyan-300/25 bg-cyan-400/18 px-4 py-2.5 text-sm font-medium text-cyan-50 transition hover:bg-cyan-400/24"
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/8 text-sm">
             <FontAwesomeIcon icon={faRightFromBracket} />
@@ -64,7 +68,7 @@ export function SidebarNav({ canManageCompanies }: SidebarNavProps) {
             <span className="block text-sm font-semibold tracking-wide">Logout</span>
             <span className="mt-1 block text-xs text-slate-400">End the current session</span>
           </span>
-        </button>
+        </ConfirmSubmitButton>
       </form>
     </nav>
   );

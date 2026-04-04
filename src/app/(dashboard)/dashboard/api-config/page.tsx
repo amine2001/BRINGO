@@ -101,23 +101,6 @@ export default async function ApiConfigPage() {
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15"
             />
           </label>
-          <div className="rounded-[24px] border border-white/10 bg-white/4 p-5 lg:col-span-2">
-            <p className="text-sm font-medium text-white">Expected normalized fields</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                "order_id",
-                "store_name",
-                "delivery_type",
-                "status",
-                "created_at",
-                "delay_minutes",
-              ].map((field) => (
-                <StatusPill key={field} tone="neutral">
-                  {field}
-                </StatusPill>
-              ))}
-            </div>
-          </div>
           <div className="flex flex-wrap gap-3 lg:col-span-2">
             <button
               type="submit"

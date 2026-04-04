@@ -1,5 +1,6 @@
 import { formatDistanceToNow } from "date-fns";
 
+import { ConfirmSubmitButton } from "@/components/dashboard/confirm-submit-button";
 import { DataTable } from "@/components/dashboard/data-table";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
@@ -46,9 +47,14 @@ export default async function CompaniesPage() {
       ) : (
         <form action={deleteCompanyAction}>
           <input type="hidden" name="companyId" value={company.id} />
-          <button className="rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-400/15">
+          <ConfirmSubmitButton
+            title="Remove this company?"
+            description="This action permanently deletes the company, its users, stores, mappings, and logs."
+            confirmLabel="Remove company"
+            className="rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-400/15"
+          >
             Remove company
-          </button>
+          </ConfirmSubmitButton>
         </form>
       ),
   }));

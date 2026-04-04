@@ -1,4 +1,5 @@
 import { DataTable } from "@/components/dashboard/data-table";
+import { ConfirmSubmitButton } from "@/components/dashboard/confirm-submit-button";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
@@ -84,9 +85,21 @@ export default async function AccessPage() {
         <form action={toggleUserActiveAction}>
           <input type="hidden" name="userId" value={user.id} />
           <input type="hidden" name="nextValue" value={user.isActive ? "false" : "true"} />
-          <button className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10">
-            {user.isActive ? "Disable user" : "Enable user"}
-          </button>
+          {user.isActive ? (
+            <ConfirmSubmitButton
+              title="Disable this user?"
+              description="The user will immediately lose access to the workspace until you enable the account again."
+              confirmLabel="Disable user"
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10"
+              confirmClassName="rounded-full border border-amber-300/25 bg-amber-400/18 px-4 py-2.5 text-sm font-medium text-amber-50 transition hover:bg-amber-400/24"
+            >
+              Disable user
+            </ConfirmSubmitButton>
+          ) : (
+            <button className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10">
+              Enable user
+            </button>
+          )}
         </form>
       </div>
     ),
