@@ -16,14 +16,23 @@ function isAuthorized(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const summary = await runPollingCycleForAllCompanies();
+
+    return NextResponse.json({
+      ok: true,
+      summary,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown cron polling error.";
+
+    console.error("Cron polling request failed.", error);
+
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-
-  const summary = await runPollingCycleForAllCompanies();
-
-  return NextResponse.json({
-    ok: true,
-    summary,
-  });
 }

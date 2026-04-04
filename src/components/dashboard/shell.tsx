@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 
 type DashboardShellProps = {
@@ -77,12 +75,14 @@ export function DashboardShell({
                 <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100">
                   3 delivery types active
                 </div>
-                <Link
-                  href="/logout"
-                  className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/14"
-                >
-                  Sign out
-                </Link>
+                <form action="/logout" method="post">
+                  <button
+                    type="submit"
+                    className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/14"
+                  >
+                    Sign out
+                  </button>
+                </form>
               </div>
             </div>
           </header>
