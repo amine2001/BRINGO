@@ -81,12 +81,20 @@ export function formatRepeatedReminderMessage(input: ReminderMessageInput) {
 }
 
 export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInput) {
-  if (input.stage === 'preparation_overdue') {
+  if (
+    input.stage === 'waiting_acceptance' ||
+    input.stage === 'preparation_overdue'
+  ) {
+    const skuCount = Number.isFinite(input.productCount)
+      ? Math.max(0, Math.trunc(Number(input.productCount)))
+      : '-'
+
     return [
-      '⏰ RETARD PRÉPARATION',
+      '⏰ RETARD COMMANDE',
       `🏪 Magasin: ${normalizeText(input.storeName)}`,
       `🆔 Commande: ${normalizeText(input.orderId)}`,
-      `⏰ Retard: +${Math.max(0, Number(input.overdueMinutes ?? 0))} min`
+      `⏰ Retard: +${Math.max(0, Number(input.overdueMinutes ?? 0))} min`,
+      `🧺 SKUs: ${skuCount}`
     ].join('\n')
   }
 
@@ -98,10 +106,7 @@ export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInpu
     input.expectedPreparationMinutes
   )
 
-  const title =
-    input.stage === 'waiting_acceptance'
-      ? 'ORDER NOT ACCEPTED'
-      : 'DELIVERY ALERT'
+  const title = 'DELIVERY ALERT'
 
   return [
     formatHeader(title).trimEnd(),
@@ -109,10 +114,7 @@ export function formatWorkflowReminderMessage(input: WorkflowReminderMessageInpu
       storeName: input.storeName,
       deliveryType: input.deliveryType,
       orderId: input.orderId,
-      statusLine:
-        input.stage === 'waiting_acceptance'
-          ? 'Status: WAITING ACCEPTANCE'
-          : 'Status: DELIVERY ALERT'
+      statusLine: 'Status: DELIVERY ALERT'
     }),
     productCount,
     expectedPreparationMinutes,
