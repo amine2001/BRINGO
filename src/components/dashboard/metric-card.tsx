@@ -21,10 +21,12 @@ export function MetricCard({
 }: MetricCardProps) {
   return (
     <article
-      className={`rounded-[24px] border p-5 shadow-lg shadow-slate-950/20 ${toneStyles[tone]}`}
+      className={`flex h-full flex-col rounded-[24px] border p-5 shadow-lg shadow-slate-950/20 ${toneStyles[tone]}`}
     >
-      <p className="text-sm text-[color:var(--dashboard-body)]">{label}</p>
-      <div className="mt-4 flex items-end justify-between gap-4">
+      <p className="min-h-[48px] text-sm leading-6 text-[color:var(--dashboard-body)]">
+        {label}
+      </p>
+      <div className="mt-3 flex min-h-[56px] items-end justify-between gap-4">
         <p className="text-3xl font-semibold tracking-tight text-[color:var(--dashboard-heading)]">
           {value}
         </p>
@@ -34,7 +36,9 @@ export function MetricCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-muted-text)]">{hint}</p>
+      <p className="mt-3 min-h-[72px] text-sm leading-6 text-[color:var(--dashboard-muted-text)]">
+        {hint}
+      </p>
     </article>
   );
 }

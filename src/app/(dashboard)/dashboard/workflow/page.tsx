@@ -15,18 +15,18 @@ export default async function WorkflowPage() {
       step: "01",
       title: "Order received",
       description:
-        "As soon as a new order appears in Redash, the first Telegram message is sent immediately.",
+        "When a new order appears in Redash, the first Telegram alert is sent immediately.",
       accent: "info" as const,
       details: [
         "Trigger: new order detected",
-        "Action: immediate first notification",
+        "Action: send first alert instantly",
       ],
     },
     {
       step: "02",
       title: "Waiting acceptance",
       description:
-        "If the order is still not accepted after the grace period, reminders keep going until preparation starts.",
+        "If acceptance is still missing after the grace period, reminders repeat until prep starts.",
       accent: "warn" as const,
       details: [
         `Grace period: ${workflow.acceptanceGraceMinutes} min`,
@@ -37,7 +37,7 @@ export default async function WorkflowPage() {
       step: "03",
       title: "Preparation SLA",
       description:
-        "After acceptance, allowed preparation time is based on the number of products in the order.",
+        "After acceptance, the preparation SLA is based on product count and minutes per product.",
       accent: "good" as const,
       details: [
         `Formula: products x ${workflow.preparationMinutesPerProduct} min`,
@@ -48,7 +48,7 @@ export default async function WorkflowPage() {
       step: "04",
       title: "Delivery alert",
       description:
-        "Once preparation ends, any delivery state marked as alert keeps notifying until the order becomes complete.",
+        "After preparation ends, any delivery alert repeats until the order is marked complete.",
       accent: "danger" as const,
       details: [
         "Trigger: shopper or picker state = alert",
@@ -91,7 +91,7 @@ export default async function WorkflowPage() {
                 <p className="mt-4 text-lg font-semibold text-[color:var(--dashboard-heading)]">
                   {item.title}
                 </p>
-                <p className="mt-3 min-h-[96px] text-sm leading-6 text-[color:var(--dashboard-body)]">
+                <p className="mt-3 min-h-[84px] text-sm leading-6 text-[color:var(--dashboard-body)]">
                   {item.description}
                 </p>
                 <div className="mt-5 grid flex-1 grid-rows-2 gap-2">

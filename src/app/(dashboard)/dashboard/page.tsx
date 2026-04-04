@@ -31,24 +31,24 @@ export default async function DashboardOverviewPage() {
     {
       label: "Orders in motion",
       value: String(data.metrics.ordersInMotion),
-      hint: "Tracked across the active store and delivery-type configuration.",
+      hint: "Tracked across active stores and delivery types.",
     },
     {
-      label: "Notifications pending stop condition",
+      label: "Pending reminders",
       value: String(data.metrics.pendingNotifications),
-      hint: "Orders still eligible for reminder dispatch.",
+      hint: "Orders still eligible for another reminder.",
       tone: "warn" as const,
     },
     {
-      label: "Delay alerts raised today",
+      label: "Delay alerts today",
       value: String(data.metrics.delayAlertsToday),
-      hint: "Admin escalations dispatched since the start of the day.",
+      hint: "Admin escalations sent since the start of today.",
       tone: "good" as const,
     },
     {
-      label: "Telegram delivery success",
+      label: "Telegram success",
       value: data.metrics.telegramDeliverySuccess,
-      hint: "Estimated from the recent operational log window.",
+      hint: "Estimated from the latest operational log window.",
     },
   ];
 
