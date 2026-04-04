@@ -1,5 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import {
+  LANGUAGE_COOKIE_NAME,
+  THEME_COOKIE_NAME,
+  resolveAppLanguage,
+  resolveLanguageDirection,
+  resolveThemePreference,
+} from "@/lib/settings/preferences";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -21,14 +31,21 @@ export const metadata: Metadata = {
     "API-driven order monitoring, Telegram automation, and admin control for last-mile operations.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const language = resolveAppLanguage(cookieStore.get(LANGUAGE_COOKIE_NAME)?.value);
+  const theme = resolveThemePreference(cookieStore.get(THEME_COOKIE_NAME)?.value);
+  const direction = resolveLanguageDirection(language);
+
   return (
     <html
-      lang="en"
+      lang={language}
+      dir={direction}
+      data-theme={theme}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >

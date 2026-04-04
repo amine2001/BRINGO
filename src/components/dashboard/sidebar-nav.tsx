@@ -36,14 +36,28 @@ export function SidebarNav() {
                 : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/8 hover:text-white",
             ].join(" ")}
           >
-            <div className="text-sm font-semibold tracking-wide">{item.label}</div>
-            <div
-              className={[
-                "mt-1 text-xs",
-                active ? "text-cyan-100/80" : "text-slate-400 group-hover:text-slate-300",
-              ].join(" ")}
-            >
-              {item.description}
+            <div className="flex items-start gap-3">
+              <span
+                className={[
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border text-sm transition",
+                  active
+                    ? "border-cyan-300/35 bg-cyan-400/16 text-cyan-50"
+                    : "border-white/10 bg-white/8 text-slate-300 group-hover:border-white/20 group-hover:text-white",
+                ].join(" ")}
+              >
+                <FontAwesomeIcon icon={item.icon} />
+              </span>
+              <span className="block">
+                <span className="block text-sm font-semibold tracking-wide">{item.label}</span>
+                <span
+                  className={[
+                    "mt-1 block text-xs",
+                    active ? "text-cyan-100/80" : "text-slate-400 group-hover:text-slate-300",
+                  ].join(" ")}
+                >
+                  {item.description}
+                </span>
+              </span>
             </div>
           </Link>
         );

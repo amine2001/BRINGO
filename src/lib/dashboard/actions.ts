@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 
@@ -24,6 +25,12 @@ import {
 } from "@/lib/tenant/context";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runCompanyPollingCycle } from "@/lib/control-tower/poll";
+import {
+  LANGUAGE_COOKIE_NAME,
+  THEME_COOKIE_NAME,
+  resolveAppLanguage,
+  resolveThemePreference,
+} from "@/lib/settings/preferences";
 
 const DELIVERY_TYPES: DeliveryType[] = ["EXPRESS", "MARKET", "HYPER"];
 
@@ -75,7 +82,29 @@ function revalidateDashboard() {
   revalidatePath("/dashboard/access");
   revalidatePath("/dashboard/users");
   revalidatePath("/dashboard/companies");
+  revalidatePath("/dashboard/settings");
   revalidatePath("/dashboard/logs");
+}
+
+export async function saveDashboardSettingsAction(formData: FormData) {
+  const cookieStore = await cookies();
+  const language = resolveAppLanguage(asOptionalString(formData.get("language")));
+  const theme = resolveThemePreference(asOptionalString(formData.get("theme")));
+
+  cookieStore.set(LANGUAGE_COOKIE_NAME, language, {
+    path: "/",
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  cookieStore.set(THEME_COOKIE_NAME, theme, {
+    path: "/",
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
+  revalidateDashboard();
 }
 
 export async function runManualPollAction() {
