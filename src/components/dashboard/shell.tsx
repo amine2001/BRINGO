@@ -4,6 +4,7 @@ type DashboardShellProps = {
   companyName?: string;
   userEmail?: string;
   bootstrapMode?: boolean;
+  canManageCompanies?: boolean;
   children: React.ReactNode;
 };
 
@@ -11,13 +12,14 @@ export function DashboardShell({
   companyName = "Unassigned tenant",
   userEmail,
   bootstrapMode = false,
+  canManageCompanies = false,
   children,
 }: DashboardShellProps) {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(251,191,36,0.14),_transparent_24%),linear-gradient(180deg,_#020617_0%,_#0f172a_40%,_#111827_100%)] text-slate-100">
-      <div className="mx-auto flex min-h-screen max-w-[1600px] gap-6 px-4 py-4 sm:px-6 lg:px-8">
-        <aside className="hidden w-80 shrink-0 lg:block">
-          <div className="sticky top-4 overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/60 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col gap-6 px-4 py-4 sm:px-6 lg:flex-row lg:px-8">
+        <aside className="w-full shrink-0 lg:w-80">
+          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-slate-950/60 p-6 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
             <div className="rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-cyan-400/18 via-cyan-400/5 to-transparent p-5">
               <p className="text-xs uppercase tracking-[0.4em] text-cyan-200/70">
                 Last Mile
@@ -51,44 +53,12 @@ export function DashboardShell({
             </div>
 
             <div className="mt-6">
-              <SidebarNav />
+              <SidebarNav canManageCompanies={canManageCompanies} />
             </div>
           </div>
         </aside>
 
-        <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-4 z-20 rounded-[28px] border border-white/10 bg-slate-950/55 px-5 py-4 shadow-xl shadow-slate-950/30 backdrop-blur-xl">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-                  Admin Console
-                </p>
-                <p className="mt-1 text-lg font-semibold text-white">
-                  Monitor the full order lifecycle and notification health
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
-                  Polling every 30s
-                </div>
-                <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100">
-                  3 delivery types active
-                </div>
-                <form action="/logout" method="post">
-                  <button
-                    type="submit"
-                    className="rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/14"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 py-6">{children}</main>
-        </div>
+        <main className="flex-1 py-2 lg:py-6">{children}</main>
       </div>
     </div>
   );

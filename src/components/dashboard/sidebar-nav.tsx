@@ -1,9 +1,11 @@
 "use client";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { dashboardNavItems } from "@/components/dashboard/navigation";
+import { getDashboardNavItems } from "@/components/dashboard/navigation";
 
 function isActive(pathname: string, href: string) {
   if (href === "/dashboard") {
@@ -13,8 +15,13 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function SidebarNav() {
+type SidebarNavProps = {
+  canManageCompanies: boolean;
+};
+
+export function SidebarNav({ canManageCompanies }: SidebarNavProps) {
   const pathname = usePathname();
+  const dashboardNavItems = getDashboardNavItems(canManageCompanies);
 
   return (
     <nav className="space-y-2">
@@ -44,6 +51,21 @@ export function SidebarNav() {
           </Link>
         );
       })}
+
+      <form action="/logout" method="post" className="pt-2">
+        <button
+          type="submit"
+          className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-slate-300 transition hover:border-white/20 hover:bg-white/8 hover:text-white"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/8 text-sm">
+            <FontAwesomeIcon icon={faRightFromBracket} />
+          </span>
+          <span className="block">
+            <span className="block text-sm font-semibold tracking-wide">Logout</span>
+            <span className="mt-1 block text-xs text-slate-400">End the current session</span>
+          </span>
+        </button>
+      </form>
     </nav>
   );
 }

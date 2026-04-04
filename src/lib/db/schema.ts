@@ -82,7 +82,7 @@ export const users = pgTable(
     unique("users_company_email_uniq").on(table.companyId, table.email),
     check(
       "users_role_check",
-      sql`${table.role} in ('admin', 'operator', 'viewer')`
+      sql`${table.role} in ('super_user', 'admin', 'operator', 'viewer')`
     ),
   ]
 );

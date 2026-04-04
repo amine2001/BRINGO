@@ -5,6 +5,7 @@ import { and, eq, isNull } from "drizzle-orm";
 
 import {
   apiConfig,
+  companies,
   delaySettings,
   deliveryTypeMapping,
   getDb,
@@ -15,8 +16,13 @@ import {
   users,
   type DeliveryType,
 } from "@/lib/db";
+import { isSuperUserRole, isUserRole, type UserRole } from "@/lib/auth/roles";
 import { writeInfoLog } from "@/lib/logs/service";
-import { requireCompanyContext } from "@/lib/tenant/context";
+import {
+  canManageCompanies,
+  requireCompanyContext,
+  requireSuperUserContext,
+} from "@/lib/tenant/context";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { runCompanyPollingCycle } from "@/lib/control-tower/poll";
 
@@ -44,6 +50,21 @@ function asBoolean(value: FormDataEntryValue | null) {
   return asString(value) === "on";
 }
 
+function asRole(value: FormDataEntryValue | null, fallback: UserRole = "operator"): UserRole {
+  const next = asString(value);
+  return isUserRole(next) ? next : fallback;
+}
+
+function slugifyCompanyName(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function revalidateDashboard() {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/stores");
@@ -51,7 +72,9 @@ function revalidateDashboard() {
   revalidatePath("/dashboard/notification-settings");
   revalidatePath("/dashboard/delay-settings");
   revalidatePath("/dashboard/api-config");
+  revalidatePath("/dashboard/access");
   revalidatePath("/dashboard/users");
+  revalidatePath("/dashboard/companies");
   revalidatePath("/dashboard/logs");
 }
 
@@ -581,16 +604,21 @@ export async function saveUserAction(formData: FormData) {
   const context = await requireCompanyContext();
   const db = getDb();
   const supabaseAdmin = getSupabaseAdminClient();
+  const hasCompanyAccess = canManageCompanies(context);
 
   const userId = asOptionalString(formData.get("userId"));
-  const companyId = asOptionalString(formData.get("companyId")) ?? context.company.id;
+  const requestedCompanyId = asOptionalString(formData.get("companyId")) ?? context.company.id;
   const fullName = asString(formData.get("fullName"));
   const email = asString(formData.get("email"));
   const password = asOptionalString(formData.get("password"));
-  const role = asString(formData.get("role")) || "operator";
+  const role = asRole(formData.get("role"));
 
-  if (!fullName || !email) {
-    throw new Error("Full name and email are required.");
+  if (!hasCompanyAccess && requestedCompanyId !== context.company.id) {
+    throw new Error("Only super users can assign access across companies.");
+  }
+
+  if (!hasCompanyAccess && isSuperUserRole(role)) {
+    throw new Error("Only super users can assign the super user role.");
   }
 
   let resolvedUserId = userId;
@@ -623,13 +651,36 @@ export async function saveUserAction(formData: FormData) {
     .limit(1)
     .then((rows) => rows[0] ?? null);
 
+  if (existingProfile && !hasCompanyAccess && existingProfile.companyId !== context.company.id) {
+    throw new Error("You can only manage access for users in your company.");
+  }
+
+  const normalizedFullName = fullName || existingProfile?.fullName || email;
+  const normalizedEmail = email || existingProfile?.email || "";
+
+  if (!normalizedFullName || !normalizedEmail) {
+    throw new Error("Full name and email are required.");
+  }
+
+  const targetCompanyId = hasCompanyAccess ? requestedCompanyId : context.company.id;
+
+  const [company] = await db
+    .select({ id: companies.id })
+    .from(companies)
+    .where(eq(companies.id, targetCompanyId))
+    .limit(1);
+
+  if (!company) {
+    throw new Error("The selected company could not be found.");
+  }
+
   if (existingProfile) {
     await db
       .update(users)
       .set({
-        companyId,
-        email,
-        fullName,
+        companyId: targetCompanyId,
+        email: normalizedEmail,
+        fullName: normalizedFullName,
         role,
         isActive: true,
         updatedAt: new Date(),
@@ -638,9 +689,9 @@ export async function saveUserAction(formData: FormData) {
   } else {
     await db.insert(users).values({
       id: resolvedUserId,
-      companyId,
-      email,
-      fullName,
+      companyId: targetCompanyId,
+      email: normalizedEmail,
+      fullName: normalizedFullName,
       role,
       isActive: true,
     });
@@ -652,11 +703,32 @@ export async function saveUserAction(formData: FormData) {
 export async function toggleUserActiveAction(formData: FormData) {
   const context = await requireCompanyContext();
   const db = getDb();
+  const hasCompanyAccess = canManageCompanies(context);
   const userId = asString(formData.get("userId"));
   const nextValue = asString(formData.get("nextValue")) === "true";
 
   if (!userId) {
     throw new Error("User ID is required.");
+  }
+
+  if (userId === context.authUser.id) {
+    throw new Error("You cannot disable your own access.");
+  }
+
+  const [targetUser] = await db
+    .select({
+      companyId: users.companyId,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!targetUser) {
+    throw new Error("User not found.");
+  }
+
+  if (!hasCompanyAccess && targetUser.companyId !== context.company.id) {
+    throw new Error("You can only manage users in your company.");
   }
 
   await db
@@ -665,7 +737,83 @@ export async function toggleUserActiveAction(formData: FormData) {
       isActive: nextValue,
       updatedAt: new Date(),
     })
-    .where(and(eq(users.id, userId), eq(users.companyId, context.company.id)));
+    .where(eq(users.id, userId));
+
+  revalidateDashboard();
+}
+
+export async function saveCompanyAction(formData: FormData) {
+  const context = await requireSuperUserContext();
+  const db = getDb();
+
+  const name = asString(formData.get("name"));
+
+  if (!name) {
+    throw new Error("Company name is required.");
+  }
+
+  const slug = slugifyCompanyName(name);
+
+  if (!slug) {
+    throw new Error("Unable to generate a valid company slug from this name.");
+  }
+
+  const [existingCompany] = await db
+    .select({ id: companies.id })
+    .from(companies)
+    .where(eq(companies.slug, slug))
+    .limit(1);
+
+  if (existingCompany) {
+    throw new Error("A company with this name already exists.");
+  }
+
+  await db.insert(companies).values({
+    name,
+    slug,
+    isActive: true,
+  });
+
+  await writeInfoLog(context.company.id, "system", `Created company ${name}.`, {
+    companyName: name,
+    createdBy: context.authUser.id,
+  });
+
+  revalidateDashboard();
+}
+
+export async function deleteCompanyAction(formData: FormData) {
+  const context = await requireSuperUserContext();
+  const db = getDb();
+  const companyId = asString(formData.get("companyId"));
+
+  if (!companyId) {
+    throw new Error("Company ID is required.");
+  }
+
+  if (companyId === context.company.id) {
+    throw new Error("Switch to another company before removing the current one.");
+  }
+
+  const [company] = await db
+    .select({
+      id: companies.id,
+      name: companies.name,
+    })
+    .from(companies)
+    .where(eq(companies.id, companyId))
+    .limit(1);
+
+  if (!company) {
+    throw new Error("Company not found.");
+  }
+
+  await db.delete(companies).where(eq(companies.id, companyId));
+
+  await writeInfoLog(context.company.id, "system", `Removed company ${company.name}.`, {
+    removedCompanyId: companyId,
+    removedBy: context.authUser.id,
+  });
 
   revalidateDashboard();
 }

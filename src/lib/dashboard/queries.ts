@@ -24,6 +24,7 @@ import {
   telegramGroups,
   users,
 } from "@/lib/db";
+import { isSuperUserRole } from "@/lib/auth/roles";
 import { listRecentLogs } from "@/lib/logs/service";
 
 function labelStatus(status: string) {
@@ -237,21 +238,44 @@ export async function getApiConfigPageData(companyId: string) {
   };
 }
 
-export async function getUsersPageData(companyId: string) {
+export async function getUsersPageData(companyId: string, actorRole?: string | null) {
   const db = getDb();
+  const hasCompanyAccess = isSuperUserRole(actorRole);
 
   const [userRows, companyRows] = await Promise.all([
     db
       .select()
       .from(users)
-      .where(eq(users.companyId, companyId))
+      .where(hasCompanyAccess ? undefined : eq(users.companyId, companyId))
       .orderBy(asc(users.fullName), asc(users.email)),
-    db.select().from(companies).orderBy(asc(companies.name)),
+    db
+      .select()
+      .from(companies)
+      .where(hasCompanyAccess ? undefined : eq(companies.id, companyId))
+      .orderBy(asc(companies.name)),
   ]);
 
   return {
     users: userRows,
     companies: companyRows,
+  };
+}
+
+export async function getCompaniesPageData() {
+  const db = getDb();
+
+  const [companyRows, userRows, storeRows] = await Promise.all([
+    db.select().from(companies).orderBy(asc(companies.name)),
+    db.select({ companyId: users.companyId }).from(users),
+    db.select({ companyId: stores.companyId }).from(stores),
+  ]);
+
+  return {
+    companies: companyRows.map((company) => ({
+      ...company,
+      userCount: userRows.filter((user) => user.companyId === company.id).length,
+      storeCount: storeRows.filter((store) => store.companyId === company.id).length,
+    })),
   };
 }
 

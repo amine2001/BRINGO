@@ -3,6 +3,7 @@ import "server-only";
 import { and, count, eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
+import { isSuperUserRole } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { companies, getDb, users } from "@/lib/db";
 
@@ -76,6 +77,20 @@ export async function requireCompanyContext(): Promise<CompanyContext> {
 
   if (!context) {
     redirect("/login");
+  }
+
+  return context;
+}
+
+export function canManageCompanies(context: CompanyContext) {
+  return context.bootstrapMode || isSuperUserRole(context.profile?.role);
+}
+
+export async function requireSuperUserContext(): Promise<CompanyContext> {
+  const context = await requireCompanyContext();
+
+  if (!canManageCompanies(context)) {
+    redirect("/dashboard/access");
   }
 
   return context;

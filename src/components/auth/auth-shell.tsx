@@ -56,7 +56,7 @@ export function AuthShell({ children }: AuthShellProps) {
       <div className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center px-4">
         <div className="pointer-events-auto rounded-full border border-white/70 bg-white/80 px-5 py-3 text-sm text-slate-700 shadow-lg backdrop-blur">
           Need help onboarding a new tenant?{" "}
-          <Link href="/dashboard/users" className="font-semibold text-slate-950">
+          <Link href="/dashboard/access" className="font-semibold text-slate-950">
             Review access controls
           </Link>
         </div>

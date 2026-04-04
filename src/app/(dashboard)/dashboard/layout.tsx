@@ -1,5 +1,5 @@
 import { DashboardShell } from "@/components/dashboard/shell";
-import { requireCompanyContext } from "@/lib/tenant/context";
+import { canManageCompanies, requireCompanyContext } from "@/lib/tenant/context";
 
 export default async function DashboardLayout({
   children,
@@ -13,6 +13,7 @@ export default async function DashboardLayout({
       companyName={context.company.name}
       userEmail={context.authUser.email ?? undefined}
       bootstrapMode={context.bootstrapMode}
+      canManageCompanies={canManageCompanies(context)}
     >
       {children}
     </DashboardShell>
