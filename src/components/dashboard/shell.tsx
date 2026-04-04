@@ -3,6 +3,7 @@ import { getCurrentAppLanguage } from "@/lib/settings/server";
 
 type DashboardShellProps = {
   children: React.ReactNode;
+  role?: string | null;
 };
 
 const HERO_COPY = {
@@ -28,7 +29,7 @@ const HERO_COPY = {
   },
 } as const;
 
-export async function DashboardShell({ children }: DashboardShellProps) {
+export async function DashboardShell({ children, role }: DashboardShellProps) {
   const language = await getCurrentAppLanguage();
   const heroCopy = HERO_COPY[language];
 
@@ -50,7 +51,7 @@ export async function DashboardShell({ children }: DashboardShellProps) {
             </div>
 
             <div className="mt-6">
-              <SidebarNav language={language} />
+              <SidebarNav language={language} role={role} />
             </div>
           </div>
         </aside>

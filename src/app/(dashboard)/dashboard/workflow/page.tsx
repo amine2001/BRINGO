@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { canEditWorkflow } from "@/lib/auth/roles";
 import { saveWorkflowSettingsAction } from "@/lib/dashboard/actions";
 import { getWorkflowPageData } from "@/lib/dashboard/queries";
 import { getCurrentAppLanguage } from "@/lib/settings/server";
@@ -295,6 +296,7 @@ export default async function WorkflowPage() {
   const copy = COPY[language];
   const data = await getWorkflowPageData(context.company.id);
   const workflow = data.settings;
+  const canEditWorkflowTimings = canEditWorkflow(context.profile?.role);
 
   const steps = [
     {
@@ -421,92 +423,94 @@ export default async function WorkflowPage() {
         </div>
       </SectionCard>
 
-      <SectionCard title={copy.editTitle} description={copy.editDescription}>
-        <form action={saveWorkflowSettingsAction} className="grid gap-4 lg:grid-cols-2">
-          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
-            <span className="block font-medium text-[color:var(--dashboard-heading)]">
-              {copy.acceptanceGraceInput}
-            </span>
-            <input
-              name="acceptanceGraceMinutes"
-              type="number"
-              min="1"
-              defaultValue={workflow.acceptanceGraceMinutes}
-              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
-            />
-          </label>
+      {canEditWorkflowTimings ? (
+        <SectionCard title={copy.editTitle} description={copy.editDescription}>
+          <form action={saveWorkflowSettingsAction} className="grid gap-4 lg:grid-cols-2">
+            <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+              <span className="block font-medium text-[color:var(--dashboard-heading)]">
+                {copy.acceptanceGraceInput}
+              </span>
+              <input
+                name="acceptanceGraceMinutes"
+                type="number"
+                min="1"
+                defaultValue={workflow.acceptanceGraceMinutes}
+                className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
+              />
+            </label>
 
-          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
-            <span className="block font-medium text-[color:var(--dashboard-heading)]">
-              {copy.acceptanceReminderInput}
-            </span>
-            <input
-              name="acceptanceReminderIntervalMinutes"
-              type="number"
-              min="1"
-              defaultValue={workflow.acceptanceReminderIntervalMinutes}
-              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
-            />
-          </label>
+            <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+              <span className="block font-medium text-[color:var(--dashboard-heading)]">
+                {copy.acceptanceReminderInput}
+              </span>
+              <input
+                name="acceptanceReminderIntervalMinutes"
+                type="number"
+                min="1"
+                defaultValue={workflow.acceptanceReminderIntervalMinutes}
+                className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
+              />
+            </label>
 
-          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
-            <span className="block font-medium text-[color:var(--dashboard-heading)]">
-              {copy.prepMinutesInput}
-            </span>
-            <input
-              name="preparationMinutesPerProduct"
-              type="number"
-              min="1"
-              defaultValue={workflow.preparationMinutesPerProduct}
-              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
-            />
-          </label>
+            <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+              <span className="block font-medium text-[color:var(--dashboard-heading)]">
+                {copy.prepMinutesInput}
+              </span>
+              <input
+                name="preparationMinutesPerProduct"
+                type="number"
+                min="1"
+                defaultValue={workflow.preparationMinutesPerProduct}
+                className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
+              />
+            </label>
 
-          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
-            <span className="block font-medium text-[color:var(--dashboard-heading)]">
-              {copy.prepReminderInput}
-            </span>
-            <input
-              name="preparationReminderIntervalMinutes"
-              type="number"
-              min="1"
-              defaultValue={workflow.preparationReminderIntervalMinutes}
-              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
-            />
-          </label>
+            <label className="space-y-2 text-sm text-[color:var(--dashboard-body)]">
+              <span className="block font-medium text-[color:var(--dashboard-heading)]">
+                {copy.prepReminderInput}
+              </span>
+              <input
+                name="preparationReminderIntervalMinutes"
+                type="number"
+                min="1"
+                defaultValue={workflow.preparationReminderIntervalMinutes}
+                className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
+              />
+            </label>
 
-          <label className="space-y-2 text-sm text-[color:var(--dashboard-body)] lg:col-span-2">
-            <span className="block font-medium text-[color:var(--dashboard-heading)]">
-              {copy.deliveryReminderInput}
-            </span>
-            <input
-              name="deliveryAlertReminderIntervalMinutes"
-              type="number"
-              min="1"
-              defaultValue={workflow.deliveryAlertReminderIntervalMinutes}
-              className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
-            />
-          </label>
+            <label className="space-y-2 text-sm text-[color:var(--dashboard-body)] lg:col-span-2">
+              <span className="block font-medium text-[color:var(--dashboard-heading)]">
+                {copy.deliveryReminderInput}
+              </span>
+              <input
+                name="deliveryAlertReminderIntervalMinutes"
+                type="number"
+                min="1"
+                defaultValue={workflow.deliveryAlertReminderIntervalMinutes}
+                className="dashboard-input w-full rounded-2xl px-4 py-3 outline-none transition focus:border-[color:var(--dashboard-nav-active-border)] focus:ring-4 focus:ring-[color:var(--dashboard-nav-active-ring)]"
+              />
+            </label>
 
-          <div className="dashboard-soft-card rounded-[24px] p-5 lg:col-span-2">
-            <p className="text-sm font-medium text-[color:var(--dashboard-heading)]">
-              {copy.formulaTitle}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-body)]">
-              {copy.formulaDescription(workflow.preparationMinutesPerProduct)}
-            </p>
-          </div>
+            <div className="dashboard-soft-card rounded-[24px] p-5 lg:col-span-2">
+              <p className="text-sm font-medium text-[color:var(--dashboard-heading)]">
+                {copy.formulaTitle}
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-body)]">
+                {copy.formulaDescription(workflow.preparationMinutesPerProduct)}
+              </p>
+            </div>
 
-          <div className="flex flex-wrap gap-3 lg:col-span-2">
-            <button
-              type="submit"
-              className="dashboard-button-primary rounded-full px-5 py-3 text-sm font-semibold"
-            >
-              {copy.saveLabel}
-            </button>
-          </div>
-        </form>
-      </SectionCard>
+            <div className="flex flex-wrap gap-3 lg:col-span-2">
+              <button
+                type="submit"
+                className="dashboard-button-primary rounded-full px-5 py-3 text-sm font-semibold"
+              >
+                {copy.saveLabel}
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      ) : null}
     </div>
   );
 }

@@ -1,8 +1,10 @@
+import { redirect } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { isViewerRole } from "@/lib/auth/roles";
 import { saveApiConfigAction } from "@/lib/dashboard/actions";
 import { getApiConfigPageData } from "@/lib/dashboard/queries";
 import { getDateFnsLocale } from "@/lib/settings/date-locale";
@@ -154,6 +156,10 @@ const COPY: Record<
 
 export default async function ApiConfigPage() {
   const context = await requireCompanyContext();
+  if (isViewerRole(context.profile?.role)) {
+    redirect("/dashboard");
+  }
+
   const language = await getCurrentAppLanguage();
   const copy = COPY[language];
   const dateLocale = getDateFnsLocale(language);

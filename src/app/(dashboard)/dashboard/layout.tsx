@@ -6,7 +6,7 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await requireCompanyContext();
+  const context = await requireCompanyContext();
 
-  return <DashboardShell>{children}</DashboardShell>;
+  return <DashboardShell role={context.profile?.role}>{children}</DashboardShell>;
 }

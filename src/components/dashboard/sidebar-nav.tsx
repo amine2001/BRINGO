@@ -19,6 +19,7 @@ function isActive(pathname: string, href: string) {
 
 type SidebarNavProps = {
   language: AppLanguage;
+  role?: string | null;
 };
 
 const LOGOUT_COPY = {
@@ -56,9 +57,9 @@ const LOGOUT_COPY = {
   },
 } as const;
 
-export function SidebarNav({ language }: SidebarNavProps) {
+export function SidebarNav({ language, role }: SidebarNavProps) {
   const pathname = usePathname();
-  const dashboardNavItems = getDashboardNavItems(language);
+  const dashboardNavItems = getDashboardNavItems(language, role);
   const logoutCopy = LOGOUT_COPY[language];
 
   return (

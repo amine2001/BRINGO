@@ -1,7 +1,10 @@
+import { redirect } from "next/navigation";
+
 import { DataTable } from "@/components/dashboard/data-table";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { isViewerRole } from "@/lib/auth/roles";
 import { decodeChatRouting } from "@/lib/delay/chat-routing";
 import { saveDelaySettingsAction } from "@/lib/dashboard/actions";
 import { getDelaySettingsPageData } from "@/lib/dashboard/queries";
@@ -124,6 +127,10 @@ const COPY: Record<
 
 export default async function DelaySettingsPage() {
   const context = await requireCompanyContext();
+  if (isViewerRole(context.profile?.role)) {
+    redirect("/dashboard");
+  }
+
   const language = await getCurrentAppLanguage();
   const copy = COPY[language];
   const data = await getDelaySettingsPageData(context.company.id);

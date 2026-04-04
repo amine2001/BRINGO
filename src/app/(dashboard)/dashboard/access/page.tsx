@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { DataTable } from "@/components/dashboard/data-table";
 import { ConfirmSubmitButton } from "@/components/dashboard/confirm-submit-button";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -5,7 +7,7 @@ import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { saveUserAction, toggleUserActiveAction } from "@/lib/dashboard/actions";
 import { getUsersPageData } from "@/lib/dashboard/queries";
-import { USER_ROLES, isSuperUserRole } from "@/lib/auth/roles";
+import { USER_ROLES, isSuperUserRole, isViewerRole } from "@/lib/auth/roles";
 import { getCurrentAppLanguage } from "@/lib/settings/server";
 import { requireCompanyContext } from "@/lib/tenant/context";
 import type { AppLanguage } from "@/lib/settings/preferences";
@@ -188,6 +190,10 @@ const COPY: Record<
 
 export default async function AccessPage() {
   const context = await requireCompanyContext();
+  if (isViewerRole(context.profile?.role)) {
+    redirect("/dashboard");
+  }
+
   const language = await getCurrentAppLanguage();
   const copy = COPY[language];
   const data = await getUsersPageData(context.company.id);

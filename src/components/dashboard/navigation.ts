@@ -9,7 +9,9 @@ import {
   faStore,
   faUsersGear,
 } from "@fortawesome/free-solid-svg-icons";
-
+import {
+  canAccessDashboardHref,
+} from "@/lib/auth/roles";
 import type { AppLanguage } from "@/lib/settings/preferences";
 
 export type DashboardNavItem = {
@@ -65,7 +67,10 @@ const NAV_LABELS: Record<
   ],
 };
 
-export function getDashboardNavItems(language: AppLanguage = "en"): DashboardNavItem[] {
+export function getDashboardNavItems(
+  language: AppLanguage = "en",
+  role?: string | null,
+): DashboardNavItem[] {
   const labels = NAV_LABELS[language];
 
   return [
@@ -117,5 +122,5 @@ export function getDashboardNavItems(language: AppLanguage = "en"): DashboardNav
       description: labels[7].description,
       icon: faGear,
     },
-  ];
+  ].filter((item) => canAccessDashboardHref(role, item.href));
 }

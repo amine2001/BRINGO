@@ -1,7 +1,10 @@
+import { redirect } from "next/navigation";
+
 import { DataTable } from "@/components/dashboard/data-table";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { isViewerRole } from "@/lib/auth/roles";
 import { saveTelegramGroupAction } from "@/lib/dashboard/actions";
 import { getTelegramGroupsPageData } from "@/lib/dashboard/queries";
 import { getCurrentAppLanguage } from "@/lib/settings/server";
@@ -122,6 +125,10 @@ const COPY: Record<
 
 export default async function TelegramGroupsPage() {
   const context = await requireCompanyContext();
+  if (isViewerRole(context.profile?.role)) {
+    redirect("/dashboard");
+  }
+
   const language = await getCurrentAppLanguage();
   const copy = COPY[language];
   const data = await getTelegramGroupsPageData(context.company.id);
