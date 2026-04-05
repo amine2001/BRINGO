@@ -73,10 +73,11 @@ export async function getOptionalCompanyContext(): Promise<CompanyContext | null
 }
 
 export async function requireCompanyContext(): Promise<CompanyContext> {
+  const authUser = await getCurrentUser();
   const context = await getOptionalCompanyContext();
 
   if (!context) {
-    redirect("/login");
+    redirect(authUser ? "/login?error=no_dashboard_access" : "/login");
   }
 
   return context;

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { getCurrentUser } from "@/lib/auth/session";
 import { signInWithPasswordAction } from "@/lib/auth/actions";
 import { getCurrentAppLanguage } from "@/lib/settings/server";
+import { getOptionalCompanyContext } from "@/lib/tenant/context";
 import type { AppLanguage } from "@/lib/settings/preferences";
 
 type LoginPageProps = {
@@ -34,6 +34,8 @@ const COPY: Record<
     errors: {
       missing_credentials: "Enter both your email address and password to continue.",
       invalid_credentials: "The provided credentials could not be verified.",
+      no_dashboard_access:
+        "This account is signed in, but it does not have an active dashboard profile yet. Add it to the users table and assign an active company.",
     },
     eyebrow: "Secure Access",
     title: "Sign in to the control tower",
@@ -55,6 +57,8 @@ const COPY: Record<
     errors: {
       missing_credentials: "Renseignez l'email et le mot de passe pour continuer.",
       invalid_credentials: "Les identifiants fournis n'ont pas pu etre verifies.",
+      no_dashboard_access:
+        "Ce compte est connecte, mais il n'a pas encore de profil dashboard actif. Ajoutez-le dans la table users et assignez-lui une societe active.",
     },
     eyebrow: "Acces securise",
     title: "Se connecter a la control tower",
@@ -97,6 +101,8 @@ const COPY: Record<
     errors: {
       missing_credentials: "Informe o email e a senha para continuar.",
       invalid_credentials: "As credenciais fornecidas nao puderam ser validadas.",
+      no_dashboard_access:
+        "Esta conta entrou com sucesso, mas ainda nao possui um perfil ativo no dashboard. Adicione-a na tabela users e vincule-a a uma empresa ativa.",
     },
     eyebrow: "Acesso seguro",
     title: "Entrar na control tower",
@@ -117,15 +123,17 @@ const COPY: Record<
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const user = await getCurrentUser();
-  if (user) {
+  const context = await getOptionalCompanyContext();
+  if (context) {
     redirect("/dashboard");
   }
 
   const language = await getCurrentAppLanguage();
   const copy = COPY[language];
   const params = await searchParams;
-  const errorMessage = params.error ? copy.errors[params.error] : null;
+  const errorMessage = params.error
+    ? copy.errors[params.error] ?? COPY.en.errors[params.error] ?? null
+    : null;
 
   return (
     <div className="w-full max-w-xl rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-2xl shadow-slate-300/40 backdrop-blur xl:p-10">
