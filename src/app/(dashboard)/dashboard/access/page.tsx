@@ -7,7 +7,11 @@ import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { saveUserAction, toggleUserActiveAction } from "@/lib/dashboard/actions";
 import { getUsersPageData } from "@/lib/dashboard/queries";
-import { USER_ROLES, isSuperUserRole, isViewerRole } from "@/lib/auth/roles";
+import {
+  USER_ROLES,
+  canAccessUserManagement,
+  isSuperUserRole,
+} from "@/lib/auth/roles";
 import { getCurrentAppLanguage } from "@/lib/settings/server";
 import { requireCompanyContext } from "@/lib/tenant/context";
 import type { AppLanguage } from "@/lib/settings/preferences";
@@ -190,7 +194,7 @@ const COPY: Record<
 
 export default async function AccessPage() {
   const context = await requireCompanyContext();
-  if (isViewerRole(context.profile?.role)) {
+  if (!canAccessUserManagement(context.profile?.role)) {
     redirect("/dashboard");
   }
 

@@ -18,7 +18,13 @@ import {
   workflowSettings,
   type DeliveryType,
 } from "@/lib/db";
-import { isUserRole, type UserRole } from "@/lib/auth/roles";
+import {
+  canAccessApiConfig,
+  canAccessUserManagement,
+  canDeleteStores,
+  isUserRole,
+  type UserRole,
+} from "@/lib/auth/roles";
 import { writeInfoLog } from "@/lib/logs/service";
 import {
   requireCompanyContext,
@@ -285,6 +291,10 @@ export async function toggleStoreActiveAction(formData: FormData) {
 
 export async function deleteStoreAction(formData: FormData) {
   const context = await requireCompanyContext();
+  if (!canDeleteStores(context.profile?.role)) {
+    throw new Error("You do not have permission to delete stores.");
+  }
+
   const db = getDb();
   const storeId = asString(formData.get("storeId"));
 
@@ -596,6 +606,10 @@ export async function saveDelaySettingsAction(formData: FormData) {
 
 export async function saveApiConfigAction(formData: FormData) {
   const context = await requireCompanyContext();
+  if (!canAccessApiConfig(context.profile?.role)) {
+    throw new Error("You do not have permission to manage API configuration.");
+  }
+
   const db = getDb();
 
   const redashApiUrl = asString(formData.get("redashApiUrl"));
@@ -649,6 +663,10 @@ export async function saveApiConfigAction(formData: FormData) {
 
 export async function saveUserAction(formData: FormData) {
   const context = await requireCompanyContext();
+  if (!canAccessUserManagement(context.profile?.role)) {
+    throw new Error("You do not have permission to manage users.");
+  }
+
   const db = getDb();
   const supabaseAdmin = getSupabaseAdminClient();
 
@@ -739,6 +757,10 @@ export async function saveUserAction(formData: FormData) {
 
 export async function toggleUserActiveAction(formData: FormData) {
   const context = await requireCompanyContext();
+  if (!canAccessUserManagement(context.profile?.role)) {
+    throw new Error("You do not have permission to manage users.");
+  }
+
   const db = getDb();
   const userId = asString(formData.get("userId"));
   const nextValue = asString(formData.get("nextValue")) === "true";

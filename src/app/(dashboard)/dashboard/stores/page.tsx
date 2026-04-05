@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { ConfirmSubmitButton } from "@/components/dashboard/confirm-submit-button";
 import { SectionCard } from "@/components/dashboard/section-card";
 import { StatusPill } from "@/components/dashboard/status-pill";
-import { canManageStores } from "@/lib/auth/roles";
+import { canDeleteStores, canManageStores } from "@/lib/auth/roles";
 import {
   deleteStoreAction,
   saveStoreAction,
@@ -205,6 +205,7 @@ export default async function StoresPage() {
   const copy = COPY[language];
   const data = await getStoresPageData(context.company.id);
   const canEditStores = canManageStores(context.profile?.role);
+  const canRemoveStores = canDeleteStores(context.profile?.role);
 
   const storeColumns = [
     { key: "store", label: copy.columns[0] },
@@ -262,18 +263,20 @@ export default async function StoresPage() {
                   </button>
                 )}
               </form>
-              <form action={deleteStoreAction}>
-                <input type="hidden" name="storeId" value={store.id} />
-                <ConfirmSubmitButton
-                  title={copy.removeTitle}
-                  description={copy.removeDescription}
-                  confirmLabel={copy.removeConfirm}
-                  cancelLabel={copy.removeCancel}
-                  className="rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
-                >
-                  {copy.remove}
-                </ConfirmSubmitButton>
-              </form>
+              {canRemoveStores ? (
+                <form action={deleteStoreAction}>
+                  <input type="hidden" name="storeId" value={store.id} />
+                  <ConfirmSubmitButton
+                    title={copy.removeTitle}
+                    description={copy.removeDescription}
+                    confirmLabel={copy.removeConfirm}
+                    cancelLabel={copy.removeCancel}
+                    className="rounded-full border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-xs font-medium text-rose-100 transition hover:bg-rose-400/20"
+                  >
+                    {copy.remove}
+                  </ConfirmSubmitButton>
+                </form>
+              ) : null}
             </div>
           ),
         }
